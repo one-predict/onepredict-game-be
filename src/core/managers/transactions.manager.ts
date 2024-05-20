@@ -60,7 +60,7 @@ export class MongodbTransactionsManager implements TransactionsManager {
     });
   }
 
-  public getSession(sessionId?: string) {
+  public getSession(sessionId?: string): ClientSession {
     return typeof sessionId === 'undefined'
       ? this.sessions[this.sessionsAsyncLocalStorage.getStore()!]
       : this.sessions[sessionId];
