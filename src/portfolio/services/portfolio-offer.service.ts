@@ -1,16 +1,20 @@
 import { sampleSize } from 'lodash';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { InjectPortfolioOfferRepository } from '@portfolio/decorators';
-import { PortfolioOfferRepository, CreatePortfolioOfferEntityParams } from '@portfolio/repositories';
+import { Coin, OfferStatus } from '@portfolio/enums';
+import { CoinsApi } from '@portfolio/api';
+import { InjectCoinsApi, InjectPortfolioOfferRepository } from '@portfolio/decorators';
+import { CreatePortfolioOfferEntityParams, PortfolioOfferRepository } from '@portfolio/repositories';
 import { PortfolioOfferEntity } from '@portfolio/entities';
-import { getCurrentDayInUtc, getDateFromUtcDay } from '@common/utils';
+import { calculatePercentageChange, getCurrentDayInUtc, getDateFromUtcDay } from '@common/utils';
 import tokens from '@portfolio/data/tokens';
 
 export interface PortfolioOfferService {
   getById(id: string): Promise<PortfolioOfferEntity | null>;
   getByDay(day: number): Promise<PortfolioOfferEntity | null>;
   listOffersForDays(days: number): Promise<PortfolioOfferEntity[]>;
+  listOffersWaitingForCompletion(): Promise<PortfolioOfferEntity[]>;
+  markOfferCompleted(offerId: string): Promise<void>;
 }
 
 @Injectable()
@@ -21,6 +25,7 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
 
   constructor(
     @InjectPortfolioOfferRepository() private readonly portfolioOfferRepository: PortfolioOfferRepository,
+    @InjectCoinsApi() readonly coinsApi: CoinsApi,
   ) {}
 
   public listOffersForDays(days: number) {
@@ -32,11 +37,21 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
     });
   }
 
+  public listOffersWaitingForCompletion() {
+    return this.portfolioOfferRepository.findByOfferStatus(OfferStatus.WaitingForCompletion);
+  }
+
   public getByDay(day: number) {
     return this.portfolioOfferRepository.findByDay(day);
   }
 
-  @Cron('* * * * *')
+  public async markOfferCompleted(offerId: string) {
+    await this.portfolioOfferRepository.updateOneById(offerId, {
+      offerStatus: OfferStatus.Completed,
+    });
+  }
+
+  @Cron('0 * * * *')
   public async generateOffers() {
     const lastOffer = await this.portfolioOfferRepository.findLatest();
 
@@ -66,6 +81,57 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
     }
 
     await this.portfolioOfferRepository.createMany(offers);
+  }
+
+  @Cron('0 * * * *')
+  public async syncOffersPrices() {
+    const offers = await this.portfolioOfferRepository.findByOfferStatus(
+      OfferStatus.WaitingForPricing,
+      getCurrentDayInUtc(),
+    );
+
+    if (!offers.length) {
+      return;
+    }
+
+    for (const offer of offers) {
+      try {
+        const pricingChanges = {};
+
+        let shouldSkipOffer = false;
+
+        for (const tokenOffer of offer.getTokenOffers()) {
+          await Promise.all(
+            [tokenOffer.firstToken, tokenOffer.secondToken].map(async (token) => {
+              const pricing = await this.coinsApi.getCoinPriceForDay(token as Coin, offer.getDay());
+
+              if (!pricing) {
+                shouldSkipOffer = true;
+              }
+
+              pricingChanges[token] = calculatePercentageChange(pricing.startDayPrice, pricing.endDayPrice);
+            }),
+          );
+
+          if (shouldSkipOffer) {
+            break;
+          }
+        }
+
+        if (shouldSkipOffer) {
+          continue;
+        }
+
+        await this.portfolioOfferRepository.updateOneById(offer.getId(), {
+          offerStatus: OfferStatus.WaitingForCompletion,
+          pricingChanges,
+        });
+      } catch (error) {
+        Logger.error('Failed to update offer prices', error);
+      }
+
+      Logger.log(`Offer ${offer.getId()} prices updated`);
+    }
   }
 
   public getById(id: string) {

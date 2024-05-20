@@ -40,6 +40,6 @@ export class MongoPortfolioEntity implements PortfolioEntity {
   }
 
   public isAwarded() {
-    return this.portfolioDocument.earnedPoints !== undefined;
+    return this.portfolioDocument.isAwarded;
   }
 }

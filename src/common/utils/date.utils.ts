@@ -1,7 +1,11 @@
 import * as dayjs from 'dayjs';
 
+export const convertMsToDay = (ms: number): number => {
+  return Math.floor(ms / 1000 / 60 / 60 / 24);
+};
+
 export const getCurrentDayInUtc = (): number => {
-  return Math.floor(dayjs().utc().toDate().getTime() / 1000 / 60 / 60 / 24);
+  return convertMsToDay(dayjs().utc().toDate().getTime());
 };
 
 export const getDateFromUtcDay = (utcDay: number) => {

@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { groupBy } from 'lodash';
+import { Cron } from '@nestjs/schedule';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectPortfolioOfferService, InjectPortfolioRepository } from '@portfolio/decorators';
 import { PortfolioRepository } from '@portfolio/repositories';
 import { PortfolioEntity, PortfolioOfferEntity } from '@portfolio/entities';
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectUserService, UserService } from '@app/user';
 import { getCurrentDayInUtc } from '@common/utils';
+import { InjectTransactionsManagerDecorator } from '@core/decorators';
+import { TransactionsManager } from '@core/managers';
 
 export interface ListPortfoliosParams {
   userId?: string;
@@ -29,6 +33,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
     @InjectPortfolioOfferService() private readonly portfolioOfferService: PortfolioOfferService,
     @InjectUserService() private readonly userService: UserService,
+    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public list(params: ListPortfoliosParams) {
@@ -81,7 +86,57 @@ export class PortfolioServiceImpl implements PortfolioService {
       user: params.userId,
       selectedTokens: params.selectedTokens,
       offer: params.offerId,
+      isAwarded: false,
     });
+  }
+
+  @Cron('*/30 * * * *')
+  public async awardPortfolios() {
+    const offers = await this.portfolioOfferService.listOffersWaitingForCompletion();
+
+    const portfolios = await this.portfolioRepository.find({
+      isAwarded: false,
+      offerIds: offers.map((offer) => offer.getId()),
+    });
+
+    const groupedPortfolios = groupBy(portfolios, (portfolio) => {
+      return portfolio.getOfferId();
+    });
+
+    for (const offer of offers) {
+      try {
+        const offerPriceChanges = offer.getPriceChanges();
+
+        const portfolios = groupedPortfolios[offer.getId()] || [];
+
+        for (const portfolio of portfolios) {
+          const earnedPoints = portfolio.getSelectedTokens().reduce((points, selectedToken) => {
+            const percentage = offerPriceChanges[selectedToken];
+
+            if (typeof percentage !== 'number') {
+              throw new Error('Percentage change not found for token.');
+            }
+
+            return points + percentage;
+          }, 0);
+
+          await this.transactionsManager.useTransaction(async () => {
+            await this.portfolioRepository.updateOneById(portfolio.getId(), {
+              isAwarded: true,
+              earnedPoints,
+            });
+
+            await this.userService.update(portfolio.getUserId(), { addPoints: earnedPoints });
+          });
+        }
+
+        await this.portfolioOfferService.markOfferCompleted(offer.getId());
+
+        Logger.log(`Offer ${offer.getId()} completed, updated ${portfolios.length} portfolios.`);
+      } catch (error) {
+        Logger.error(`Failed to award portfolios for offer: ${offer.getId()}`, error);
+      }
+    }
   }
 
   private validateSelectedTokens(selectedTokens: string[], offer: PortfolioOfferEntity) {

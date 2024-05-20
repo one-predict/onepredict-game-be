@@ -26,6 +26,7 @@ export default class UserController {
         name: user.getName(),
         imageUrl: user.getImageUrl(),
         balance: user.getBalance(),
+        points: user.getPoints(),
       },
     };
   }
@@ -41,6 +42,7 @@ export default class UserController {
         id: user.getId(),
         fid: user.getFid(),
         name: user.getName(),
+        points: user.getPoints(),
         imageUrl: user.getImageUrl(),
         balance: user.getBalance(),
       },
@@ -62,6 +64,7 @@ export default class UserController {
         fid: user.getFid(),
         name: user.getName(),
         imageUrl: user.getImageUrl(),
+        points: user.getPoints(),
         balance: user.getBalance(),
       },
     };

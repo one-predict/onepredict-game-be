@@ -1,29 +1,5 @@
-const tokens = [
-  'aptos',
-  'arbitrum',
-  'avalanche',
-  'axie',
-  'bitcoin',
-  'bnb',
-  'celestia',
-  'chia',
-  'cosmos',
-  'dogecoin',
-  'etherium',
-  'fantom',
-  'jupiter',
-  'litecoin',
-  'mantle',
-  'near',
-  'optimism',
-  'polkadot',
-  'polygon',
-  'shiba-inu',
-  'solana',
-  'starknet',
-  'toncoin',
-  'wormhole',
-  'xrp',
-];
+import { Coin } from '@portfolio/enums';
+
+const tokens = Object.values(Coin);
 
 export default tokens;

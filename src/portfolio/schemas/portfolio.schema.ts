@@ -25,8 +25,11 @@ export class Portfolio {
   })
   offer: ObjectId;
 
-  @Prop({ type: mongoose.Schema.Types.Number })
+  @Prop({ required: false, type: mongoose.Schema.Types.Number })
   earnedPoints?: number;
+
+  @Prop({ required: true, type: mongoose.Schema.Types.Boolean })
+  isAwarded: boolean;
 
   @Prop({ type: mongoose.Schema.Types.Date })
   createdAt: Date;
@@ -36,3 +39,4 @@ export const PortfolioSchema = SchemaFactory.createForClass(Portfolio);
 
 PortfolioSchema.index({ user: 1, offer: 1 }, { unique: true });
 PortfolioSchema.index({ offer: 1 });
+PortfolioSchema.index({ isAwarded: 1, offer: 1 });

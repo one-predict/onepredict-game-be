@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
+import { InjectTransactionsManagerDecorator } from '@core/decorators';
+import { TransactionsManager } from '@core/managers';
 
 interface CreateUserEntityParams {
   fid: number;
@@ -16,6 +18,7 @@ interface UpdateUserEntityParams {
   balance?: number;
   name?: string;
   imageUrl?: string;
+  addPoints?: number;
 }
 
 export interface UserRepository {
@@ -27,7 +30,10 @@ export interface UserRepository {
 
 @Injectable()
 export class MongoUserRepository implements UserRepository {
-  public constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  public constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+  ) {}
 
   public async findByFid(fid: number) {
     const user = await this.userModel.findOne({ fid }).lean().exec();
@@ -51,8 +57,18 @@ export class MongoUserRepository implements UserRepository {
   }
 
   public async updateById(id: string, params: UpdateUserEntityParams) {
+    const { addPoints, ...restParams } = params;
+
     const user = await this.userModel
-      .findOneAndUpdate({ _id: new ObjectId(id) }, params, { new: true })
+      .findOneAndUpdate(
+        { _id: new ObjectId(id) },
+        {
+          ...restParams,
+          ...(addPoints !== undefined ? { $inc: { points: addPoints } } : {}),
+        },
+        { new: true, session: this.transactionsManager.getSession() },
+      )
+      .lean()
       .exec();
 
     return user && new MongoUserEntity(user);

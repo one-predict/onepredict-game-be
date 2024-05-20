@@ -29,7 +29,7 @@ async function bootstrap() {
   await app.register(secureSession, {
     key: Buffer.from(configService.getOrThrow<string>('SESSIONS_SECRET'), 'hex'),
     cookie: {
-      domain: configService.getOrThrow<string>('COOKIE_DOMAIN'),
+      domain: configService.get<string>('COOKIE_DOMAIN'),
       httpOnly: true,
       path: '/',
       secure: true,

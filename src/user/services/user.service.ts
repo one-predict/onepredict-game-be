@@ -14,6 +14,7 @@ export interface UpdateUserParams {
   name?: string;
   imageUrl?: string;
   balance?: number;
+  addPoints?: number;
 }
 
 export interface UserService {
@@ -55,6 +56,7 @@ export class UserServiceImpl implements UserService {
       ...(params.name ? { name: params.name } : {}),
       ...(params.imageUrl ? { imageUrl: params.imageUrl } : {}),
       ...(params.balance !== undefined ? { balance: params.balance } : {}),
+      ...(params.addPoints !== undefined ? { addPoints: params.addPoints } : {}),
     });
   }
 }

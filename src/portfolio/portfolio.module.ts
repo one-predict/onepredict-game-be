@@ -1,10 +1,13 @@
 import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { HttpModule } from '@nestjs/axios';
+import { CoreModule } from '@app/core';
 import { Portfolio, PortfolioOffer, PortfolioOfferSchema, PortfolioSchema } from '@portfolio/schemas';
 import { PortfolioServiceImpl, PortfolioOfferServiceImpl } from '@portfolio/services';
 import { PortfolioController, PortfolioOfferController } from '@portfolio/controllers';
 import { MongoPortfolioRepository, MongoPortfolioOfferRepository } from '@portfolio/repositories';
+import { CoinGeckoApi } from '@portfolio/api';
 import { UserModule } from '@app/user';
 import PortfolioModuleTokens from './portfolio.module.tokens';
 
@@ -14,6 +17,8 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     MongooseModule.forFeature([{ name: PortfolioOffer.name, schema: PortfolioOfferSchema }]),
     UserModule,
     ConfigModule,
+    HttpModule,
+    CoreModule,
   ],
   controllers: [PortfolioController, PortfolioOfferController],
   providers: [
@@ -32,6 +37,10 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     {
       provide: PortfolioModuleTokens.Repositories.PortfolioOfferRepository,
       useClass: MongoPortfolioOfferRepository,
+    },
+    {
+      provide: PortfolioModuleTokens.Api.CoinsApi,
+      useClass: CoinGeckoApi,
     },
   ],
   exports: [
