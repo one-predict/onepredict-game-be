@@ -5,11 +5,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from '@app/auth';
 import { UserModule } from '@app/user';
+import { CoreModule } from '@app/core';
 import { PortfolioModule } from '@app/portfolio';
 import { LoggerMiddleware } from '@common/middlewares';
 
 @Module({
   imports: [
+    CoreModule,
     AuthModule,
     UserModule,
     PortfolioModule,
