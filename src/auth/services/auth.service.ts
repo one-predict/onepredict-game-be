@@ -31,7 +31,7 @@ export class AuthServiceImpl implements AuthService {
       nonce: params.nonce,
       message: params.message,
       signature: params.signature,
-      domain: this.configService.getOrThrow('APPLICATION_ORIGIN'),
+      domain: this.configService.getOrThrow('AUTH_DOMAIN'),
     });
 
     const { success, fid } = verifyResponse;

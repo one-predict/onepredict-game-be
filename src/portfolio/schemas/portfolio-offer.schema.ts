@@ -33,4 +33,4 @@ export class PortfolioOffer {
 
 export const PortfolioOfferSchema = SchemaFactory.createForClass(PortfolioOffer);
 
-PortfolioOfferSchema.index({ day: 1 });
+PortfolioOfferSchema.index({ day: 1 }, { unique: true });
