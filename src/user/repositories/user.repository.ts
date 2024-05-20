@@ -67,9 +67,7 @@ export class MongoUserRepository implements UserRepository {
       return null;
     }
 
-    // 300, 100, 200
-
-    const [{ summary }] = await this.userModel
+    const [{ summary = 0 } = {}] = await this.userModel
       .aggregate([
         Match(Or([{ points: Gt(user.points) }, { points: user.points, _id: Gt(user._id) }])),
         { $sort: { points: -1, _id: 1 } },
