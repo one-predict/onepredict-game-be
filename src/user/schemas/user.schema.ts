@@ -24,3 +24,4 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.index({ fid: 1 }, { unique: true });
+UserSchema.index({ points: -1, _id: 1 });

@@ -2,8 +2,8 @@ import { Controller, Session, Get, Post, Body, UseGuards } from '@nestjs/common'
 import * as secureSession from '@fastify/secure-session';
 import { UserService } from '@user/services';
 import { InjectUserService } from '@user/decorators';
-import { CreateUserDto, GetUserByFidDto } from '@user/dto';
-import { PrivateApiAuthorizationTokenGuard } from '@common/guards';
+import { CreateUserDto, GetUserByFidDto, GetUserRankByIdDto } from '@user/dto';
+import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
 
 @Controller()
 export default class UserController {
@@ -29,6 +29,14 @@ export default class UserController {
         points: user.getPoints(),
       },
     };
+  }
+
+  @Get('/users/current-user/rank')
+  @UseGuards(AuthGuard)
+  public async getCurrentUserRank(@Session() session: secureSession.Session) {
+    const rank = await this.userService.getUserRank(session.get('userId'));
+
+    return { rank };
   }
 
   // GRPC Style
@@ -68,5 +76,14 @@ export default class UserController {
         balance: user.getBalance(),
       },
     };
+  }
+
+  // GRPC Style
+  @Post('/users/getUserRankById')
+  @UseGuards(PrivateApiAuthorizationTokenGuard)
+  public async getUserRankById(@Body() body: GetUserRankByIdDto) {
+    const rank = await this.userService.getUserRank(body.userId);
+
+    return { rank };
   }
 }

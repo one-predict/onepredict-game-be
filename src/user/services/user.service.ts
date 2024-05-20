@@ -21,6 +21,7 @@ export interface UserService {
   getById(id: string): Promise<UserEntity | null>;
   getByFid(fid: number): Promise<UserEntity | null>;
   getByFidIfExists(fid: number): Promise<UserEntity>;
+  getUserRank(id: string): Promise<number | null>;
   create(params: CreateUserParams): Promise<UserEntity>;
   update(id: string, params: UpdateUserParams): Promise<UserEntity | null>;
 }
@@ -58,5 +59,9 @@ export class UserServiceImpl implements UserService {
       ...(params.balance !== undefined ? { balance: params.balance } : {}),
       ...(params.addPoints !== undefined ? { addPoints: params.addPoints } : {}),
     });
+  }
+
+  public getUserRank(userId: string) {
+    return this.userRepository.getUserRank(userId);
   }
 }
