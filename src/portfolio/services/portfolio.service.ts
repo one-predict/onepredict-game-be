@@ -4,7 +4,12 @@ import { PortfolioRepository } from '@portfolio/repositories';
 import { PortfolioEntity, PortfolioOfferEntity } from '@portfolio/entities';
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectUserService, UserService } from '@app/user';
-import { getCurrentDay } from '@common/utils';
+import { getCurrentDayInUtc } from '@common/utils';
+
+export interface ListPortfoliosParams {
+  userId?: string;
+  offerIds?: string[];
+}
 
 export interface CreatePortfolioParams {
   userId: string;
@@ -13,6 +18,7 @@ export interface CreatePortfolioParams {
 }
 
 export interface PortfolioService {
+  list(params: ListPortfoliosParams): Promise<PortfolioEntity[]>;
   listForUserAndOffers(userId: string, offerIds: string[]): Promise<PortfolioEntity[]>;
   create(params: CreatePortfolioParams): Promise<PortfolioEntity>;
 }
@@ -24,6 +30,13 @@ export class PortfolioServiceImpl implements PortfolioService {
     @InjectPortfolioOfferService() private readonly portfolioOfferService: PortfolioOfferService,
     @InjectUserService() private readonly userService: UserService,
   ) {}
+
+  public list(params: ListPortfoliosParams) {
+    return this.portfolioRepository.find({
+      userId: params.userId,
+      offerIds: params.offerIds,
+    });
+  }
 
   public listForUserAndOffers(userId: string, offerIds: string[]) {
     if (!offerIds.length) {
@@ -49,7 +62,7 @@ export class PortfolioServiceImpl implements PortfolioService {
       throw new BadRequestException('Provided user is not found');
     }
 
-    if (this.isOfferAvailable(offer.getDay())) {
+    if (offer.getDay() !== getCurrentDayInUtc() + 1) {
       throw new BadRequestException('Provided offer is not available.');
     }
 
@@ -81,11 +94,5 @@ export class PortfolioServiceImpl implements PortfolioService {
     return selectedTokens.every((token, index) => {
       return tokenOffers[index].firstToken === token || tokenOffers[index].secondToken === token;
     });
-  }
-
-  private isOfferAvailable(offerDay: number) {
-    const currentDay = getCurrentDay();
-
-    return offerDay >= currentDay && offerDay <= currentDay + 1;
   }
 }

@@ -1,3 +1,4 @@
+import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Portfolio, PortfolioOffer, PortfolioOfferSchema, PortfolioSchema } from '@portfolio/schemas';
@@ -5,7 +6,6 @@ import { PortfolioServiceImpl, PortfolioOfferServiceImpl } from '@portfolio/serv
 import { PortfolioController, PortfolioOfferController } from '@portfolio/controllers';
 import { MongoPortfolioRepository, MongoPortfolioOfferRepository } from '@portfolio/repositories';
 import { UserModule } from '@app/user';
-
 import PortfolioModuleTokens from './portfolio.module.tokens';
 
 @Module({
@@ -13,6 +13,7 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     MongooseModule.forFeature([{ name: Portfolio.name, schema: PortfolioSchema }]),
     MongooseModule.forFeature([{ name: PortfolioOffer.name, schema: PortfolioOfferSchema }]),
     UserModule,
+    ConfigModule,
   ],
   controllers: [PortfolioController, PortfolioOfferController],
   providers: [

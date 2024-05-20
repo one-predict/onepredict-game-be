@@ -26,6 +26,9 @@ export class PortfolioOffer {
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   day: number;
+
+  @Prop({ required: true, type: mongoose.Schema.Types.String })
+  date: string;
 }
 
 export const PortfolioOfferSchema = SchemaFactory.createForClass(PortfolioOffer);

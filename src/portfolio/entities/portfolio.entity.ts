@@ -7,6 +7,7 @@ export interface PortfolioEntity {
   getUserId(): string;
   getOfferId(): string;
   getCreatedAt(): Date;
+  getSelectedTokens(): string[];
   getEarnedPoints(): number;
   isAwarded(): boolean;
 }
@@ -20,6 +21,10 @@ export class MongoPortfolioEntity implements PortfolioEntity {
 
   public getUserId() {
     return this.portfolioDocument.user.toString();
+  }
+
+  public getSelectedTokens() {
+    return this.portfolioDocument.selectedTokens;
   }
 
   public getOfferId() {

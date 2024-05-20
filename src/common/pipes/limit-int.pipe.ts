@@ -4,7 +4,7 @@ import { PipeTransform, Injectable, BadRequestException, ArgumentMetadata } from
 export default class LimitIntPipe implements PipeTransform {
   constructor(private maxValue: number) {}
 
-  public transform(value: any, metadata: ArgumentMetadata): number {
+  public transform(value: unknown, metadata: ArgumentMetadata): number {
     if (value === undefined || value === null) {
       throw new BadRequestException(`The ${metadata.type} parameter '${metadata.data}' is required`);
     }

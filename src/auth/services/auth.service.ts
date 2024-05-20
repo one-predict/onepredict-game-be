@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { createAppClient, viemConnector } from '@farcaster/auth-client';
 import { InjectUserService, UserEntity, UserService } from '@app/user';
+import { ConfigService } from '@nestjs/config';
 
 interface VerifySignInMessageParams {
   message: string;
@@ -20,14 +21,17 @@ export class AuthServiceImpl implements AuthService {
     ethereum: viemConnector(),
   });
 
-  constructor(@InjectUserService() private readonly userService: UserService) {}
+  constructor(
+    @InjectUserService() private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
 
   public async verifySignInMessage(params: VerifySignInMessageParams) {
     const verifyResponse = await this.appClient.verifySignInMessage({
       nonce: params.nonce,
       message: params.message,
       signature: params.signature,
-      domain: 'example.com',
+      domain: this.configService.getOrThrow('APPLICATION_ORIGIN'),
     });
 
     const { success, fid } = verifyResponse;
@@ -47,6 +51,13 @@ export class AuthServiceImpl implements AuthService {
       });
 
       return { fid, user };
+    }
+
+    if (user.getName() !== params.name || user.getImageUrl() !== params.pfp) {
+      await this.userService.update(user.getId(), {
+        name: params.name,
+        imageUrl: params.pfp,
+      });
     }
 
     return { fid, user };

@@ -6,21 +6,23 @@ import { MatchRange } from '@common/data/aggregations';
 import { PortfolioOffer, TokenOffer } from '@portfolio/schemas';
 import { MongoPortfolioOfferEntity, PortfolioOfferEntity } from '@portfolio/entities';
 
-export interface FindPortfolioOffersParams {
+export interface FindPortfolioOfferEntitiesParams {
   fromDay?: number;
   toDay?: number;
 }
 
-export interface CreatePortfolioOfferParams {
+export interface CreatePortfolioOfferEntityParams {
   day: number;
+  date: string;
   tokenOffers: TokenOffer[];
 }
 
 export interface PortfolioOfferRepository {
-  find(params: FindPortfolioOffersParams): Promise<PortfolioOfferEntity[]>;
-  findLatest(): Promise<PortfolioOfferEntity>;
-  findById(id: string): Promise<PortfolioOfferEntity>;
-  createMany(params: CreatePortfolioOfferParams[]): Promise<PortfolioOfferEntity[]>;
+  find(params: FindPortfolioOfferEntitiesParams): Promise<PortfolioOfferEntity[]>;
+  findLatest(): Promise<PortfolioOfferEntity | null>;
+  findById(id: string): Promise<PortfolioOfferEntity | null>;
+  findByDay(day: number): Promise<PortfolioOfferEntity | null>;
+  createMany(params: CreatePortfolioOfferEntityParams[]): Promise<PortfolioOfferEntity[]>;
 }
 
 @Injectable()
@@ -30,14 +32,18 @@ export class MongoPortfolioOfferRepository implements PortfolioOfferRepository {
     private portfolioOfferModel: Model<PortfolioOffer>,
   ) {}
 
-  public async find(params: FindPortfolioOffersParams) {
+  public async find(params: FindPortfolioOfferEntitiesParams) {
     const query: mongoose.FilterQuery<PortfolioOffer> = {};
 
     if (params.fromDay || params.toDay) {
       query.day = MatchRange(params.fromDay, params.toDay);
     }
 
-    const portfolioOfferDocuments = await this.portfolioOfferModel.find(query).lean().exec();
+    const portfolioOfferDocuments = await this.portfolioOfferModel
+      .find(query)
+      .sort({ day: -1 })
+      .lean()
+      .exec();
 
     return portfolioOfferDocuments.map((portfolioOfferDocument) => {
       return new MongoPortfolioOfferEntity(portfolioOfferDocument);
@@ -56,7 +62,13 @@ export class MongoPortfolioOfferRepository implements PortfolioOfferRepository {
     return portfolioOfferDocument && new MongoPortfolioOfferEntity(portfolioOfferDocument);
   }
 
-  public async createMany(params: CreatePortfolioOfferParams[]) {
+  public async findByDay(day: number) {
+    const portfolioOfferDocument = await this.portfolioOfferModel.findOne({ day }).exec();
+
+    return portfolioOfferDocument && new MongoPortfolioOfferEntity(portfolioOfferDocument);
+  }
+
+  public async createMany(params: CreatePortfolioOfferEntityParams[]) {
     const portfolioOfferDocuments = await this.portfolioOfferModel.create(params);
 
     return portfolioOfferDocuments.map((portfolioOfferDocument) => {

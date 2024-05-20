@@ -8,7 +8,7 @@ export class User {
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   fid: number;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.Number })
+  @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
   balance: number;
 
   @Prop()

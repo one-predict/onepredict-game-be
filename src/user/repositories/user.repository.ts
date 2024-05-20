@@ -5,9 +5,15 @@ import { ObjectId } from 'mongodb';
 import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
 
-interface CreateUserParams {
+interface CreateUserEntityParams {
   fid: number;
-  balance: number;
+  balance?: number;
+  name?: string;
+  imageUrl?: string;
+}
+
+interface UpdateUserEntityParams {
+  balance?: number;
   name?: string;
   imageUrl?: string;
 }
@@ -15,7 +21,8 @@ interface CreateUserParams {
 export interface UserRepository {
   findByFid(fid: number): Promise<UserEntity | null>;
   findById(id: string): Promise<UserEntity | null>;
-  create(params: CreateUserParams): Promise<UserEntity>;
+  create(params: CreateUserEntityParams): Promise<UserEntity>;
+  updateById(id: string, params: UpdateUserEntityParams): Promise<UserEntity | null>;
 }
 
 @Injectable()
@@ -37,9 +44,17 @@ export class MongoUserRepository implements UserRepository {
     return user && new MongoUserEntity(user);
   }
 
-  public async create(params: CreateUserParams) {
+  public async create(params: CreateUserEntityParams) {
     const user = await this.userModel.create(params);
 
     return new MongoUserEntity(user);
+  }
+
+  public async updateById(id: string, params: UpdateUserEntityParams) {
+    const user = await this.userModel
+      .findOneAndUpdate({ _id: new ObjectId(id) }, params, { new: true })
+      .exec();
+
+    return user && new MongoUserEntity(user);
   }
 }

@@ -1,3 +1,4 @@
+import * as Joi from 'joi';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -12,7 +13,16 @@ import { LoggerMiddleware } from '@common/middlewares';
     AuthModule,
     UserModule,
     PortfolioModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      validationSchema: Joi.object({
+        PORT: Joi.number().port().default(3000),
+        DATABASE_CONNECTION_URL: Joi.string().required(),
+        APPLICATION_ORIGIN: Joi.string().required(),
+        SESSIONS_SECRET: Joi.string().required(),
+        SESSIONS_EXPIRY: Joi.number().default(86400),
+        PRIVATE_API_AUTHORIZATION_SECRET: Joi.string().required(),
+      }),
+    }),
     ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],

@@ -1,5 +1,14 @@
-import { Controller, Get, UseGuards, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
-import { AuthGuard } from '@common/guards';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+  Body,
+  Post,
+} from '@nestjs/common';
+import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectPortfolioOfferService } from '@portfolio/decorators';
 import { LimitIntPipe } from '@common/pipes';
@@ -19,8 +28,25 @@ export default class PortfolioController {
       return {
         id: portfolioOffer.getId(),
         day: portfolioOffer.getDay(),
+        date: portfolioOffer.getDate(),
         tokenOffers: portfolioOffer.getTokenOffers(),
       };
     });
+  }
+
+  // GRPC Style
+  @Post('/portfolio-offers/getOfferByDay')
+  @UseGuards(PrivateApiAuthorizationTokenGuard)
+  public async getPortfolioOfferByDay(@Body('offerDay', new ParseIntPipe()) day: number) {
+    const portfolioOffer = await this.portfolioOfferService.getByDay(day);
+
+    return {
+      offer: portfolioOffer && {
+        id: portfolioOffer.getId(),
+        day: portfolioOffer.getDay(),
+        date: portfolioOffer.getDate(),
+        tokenOffers: portfolioOffer.getTokenOffers(),
+      },
+    };
   }
 }

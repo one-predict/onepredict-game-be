@@ -5,9 +5,15 @@ import { UserEntity } from '@user/entities';
 
 export interface CreateUserParams {
   fid: number;
-  name: string;
-  imageUrl: string;
-  balance: number;
+  name?: string;
+  imageUrl?: string;
+  balance?: number;
+}
+
+export interface UpdateUserParams {
+  name?: string;
+  imageUrl?: string;
+  balance?: number;
 }
 
 export interface UserService {
@@ -15,6 +21,7 @@ export interface UserService {
   getByFid(fid: number): Promise<UserEntity | null>;
   getByFidIfExists(fid: number): Promise<UserEntity>;
   create(params: CreateUserParams): Promise<UserEntity>;
+  update(id: string, params: UpdateUserParams): Promise<UserEntity | null>;
 }
 
 @Injectable()
@@ -41,5 +48,13 @@ export class UserServiceImpl implements UserService {
 
   public async create(params: CreateUserParams) {
     return this.userRepository.create(params);
+  }
+
+  public update(id: string, params: UpdateUserParams) {
+    return this.userRepository.updateById(id, {
+      ...(params.name ? { name: params.name } : {}),
+      ...(params.imageUrl ? { imageUrl: params.imageUrl } : {}),
+      ...(params.balance !== undefined ? { balance: params.balance } : {}),
+    });
   }
 }

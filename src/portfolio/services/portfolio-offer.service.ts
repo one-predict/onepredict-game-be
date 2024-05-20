@@ -2,16 +2,14 @@ import { sampleSize } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectPortfolioOfferRepository } from '@portfolio/decorators';
-import {
-  PortfolioOfferRepository,
-  CreatePortfolioOfferParams as CreatePortfolioOfferModelParams,
-} from '@portfolio/repositories';
+import { PortfolioOfferRepository, CreatePortfolioOfferEntityParams } from '@portfolio/repositories';
 import { PortfolioOfferEntity } from '@portfolio/entities';
-import { getCurrentDay } from '@common/utils';
+import { getCurrentDayInUtc, getDateFromUtcDay } from '@common/utils';
 import tokens from '@portfolio/data/tokens';
 
 export interface PortfolioOfferService {
   getById(id: string): Promise<PortfolioOfferEntity | null>;
+  getByDay(day: number): Promise<PortfolioOfferEntity | null>;
   listOffersForDays(days: number): Promise<PortfolioOfferEntity[]>;
 }
 
@@ -26,7 +24,7 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
   ) {}
 
   public listOffersForDays(days: number) {
-    const currentDay = getCurrentDay();
+    const currentDay = getCurrentDayInUtc();
 
     return this.portfolioOfferRepository.find({
       fromDay: currentDay - days,
@@ -34,11 +32,15 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
     });
   }
 
-  @Cron('0 * * * *')
+  public getByDay(day: number) {
+    return this.portfolioOfferRepository.findByDay(day);
+  }
+
+  @Cron('* * * * *')
   public async generateOffers() {
     const lastOffer = await this.portfolioOfferRepository.findLatest();
 
-    const currentDay = getCurrentDay();
+    const currentDay = getCurrentDayInUtc();
 
     const nextOfferDay = lastOffer ? lastOffer.getDay() + 1 : currentDay;
 
@@ -46,13 +48,14 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
       return;
     }
 
-    const offers: CreatePortfolioOfferModelParams[] = [];
+    const offers: CreatePortfolioOfferEntityParams[] = [];
 
     for (let day = nextOfferDay; day <= nextOfferDay + this.OFFERS_TO_GENERATE; day++) {
       const availableTokens: string[] = sampleSize(tokens, this.MAX_TOKEN_OFFERS * 2);
 
       offers.push({
         day,
+        date: getDateFromUtcDay(day),
         tokenOffers: new Array(this.MAX_TOKEN_OFFERS).fill(null).map((_, index) => {
           return {
             firstToken: availableTokens[index * 2],
