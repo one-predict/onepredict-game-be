@@ -51,7 +51,7 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
     });
   }
 
-  @Cron('0 * * * *')
+  @Cron('* * * * *')
   public async generateOffers() {
     const lastOffer = await this.portfolioOfferRepository.findLatest();
 
@@ -70,6 +70,7 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
 
       offers.push({
         day,
+        offerStatus: OfferStatus.WaitingForPricing,
         date: getDateFromUtcDay(day),
         tokenOffers: new Array(this.MAX_TOKEN_OFFERS).fill(null).map((_, index) => {
           return {
