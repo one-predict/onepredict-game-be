@@ -8,6 +8,7 @@ import { UserModule } from '@app/user';
 import { CoreModule } from '@app/core';
 import { PortfolioModule } from '@app/portfolio';
 import { LoggerMiddleware } from '@common/middlewares';
+import { BattleModule } from '@app/battle/battle.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LoggerMiddleware } from '@common/middlewares';
     AuthModule,
     UserModule,
     PortfolioModule,
+    BattleModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),
