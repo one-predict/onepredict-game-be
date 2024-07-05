@@ -6,7 +6,6 @@ import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
-import { Gt, Match, Or } from '@common/data/aggregations';
 
 interface CreateUserEntityParams {
   fid: number;
@@ -16,16 +15,14 @@ interface CreateUserEntityParams {
 }
 
 interface UpdateUserEntityParams {
-  balance?: number;
   name?: string;
   imageUrl?: string;
-  addPoints?: number;
+  addCoins?: number;
 }
 
 export interface UserRepository {
   findByFid(fid: number): Promise<UserEntity | null>;
   findById(id: string): Promise<UserEntity | null>;
-  getUserRank(userId: string): Promise<number | null>;
   create(params: CreateUserEntityParams): Promise<UserEntity>;
   updateById(id: string, params: UpdateUserEntityParams): Promise<UserEntity | null>;
 }
@@ -38,7 +35,11 @@ export class MongoUserRepository implements UserRepository {
   ) {}
 
   public async findByFid(fid: number) {
-    const user = await this.userModel.findOne({ fid }).lean().exec();
+    const user = await this.userModel
+      .findOne({ fid })
+      .lean()
+      .session(this.transactionsManager.getSession())
+      .exec();
 
     return user && new MongoUserEntity(user);
   }
@@ -46,53 +47,30 @@ export class MongoUserRepository implements UserRepository {
   public async findById(id: string) {
     const user = await this.userModel
       .findOne({ _id: new ObjectId(id) })
+      .session(this.transactionsManager.getSession())
       .lean()
       .exec();
 
     return user && new MongoUserEntity(user);
   }
 
-  public async getUserRank(userId: string) {
-    const user = await this.userModel
-      .findOne(
-        {
-          _id: new ObjectId(userId),
-        },
-        { points: 1, _id: 1 },
-      )
-      .lean()
-      .exec();
-
-    if (!user) {
-      return null;
-    }
-
-    const [{ summary = 0 } = {}] = await this.userModel
-      .aggregate([
-        Match(Or([{ points: Gt(user.points) }, { points: user.points, _id: Gt(user._id) }])),
-        { $sort: { points: -1, _id: 1 } },
-        { $count: 'summary' },
-      ])
-      .exec();
-
-    return (summary as number) + 1;
-  }
-
   public async create(params: CreateUserEntityParams) {
-    const user = await this.userModel.create(params);
+    const [user] = await this.userModel.create([params], {
+      session: this.transactionsManager.getSession(),
+    });
 
     return new MongoUserEntity(user);
   }
 
   public async updateById(id: string, params: UpdateUserEntityParams) {
-    const { addPoints, ...restParams } = params;
+    const { addCoins, ...restParams } = params;
 
     const user = await this.userModel
       .findOneAndUpdate(
         { _id: new ObjectId(id) },
         {
           ...restParams,
-          ...(addPoints !== undefined ? { $inc: { points: addPoints } } : {}),
+          ...(addCoins !== undefined ? { $inc: { coinsBalance: addCoins } } : {}),
         },
         { new: true, session: this.transactionsManager.getSession() },
       )

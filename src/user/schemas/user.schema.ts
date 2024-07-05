@@ -9,10 +9,10 @@ export class User {
   fid: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
-  balance: number;
+  coinsBalance: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 0 })
-  points: number;
+  energy: number;
 
   @Prop()
   name: string;
@@ -24,4 +24,3 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.index({ fid: 1 }, { unique: true });
-UserSchema.index({ points: -1, _id: 1 });

@@ -10,6 +10,7 @@ import { TransactionsManager } from '@core/managers';
 interface FindPortfolioEntitiesParams {
   userId?: string;
   offerIds?: string[];
+  offerId?: string;
   isAwarded?: boolean;
 }
 
@@ -22,7 +23,7 @@ export interface CreatePortfolioEntityParams {
 
 export interface UpdatePortfolioEntityParams {
   isAwarded?: boolean;
-  earnedPoints?: number;
+  earnedCoins?: number;
 }
 
 export interface PortfolioRepository {
@@ -50,6 +51,7 @@ export class MongoPortfolioRepository implements PortfolioRepository {
               },
             }
           : {}),
+        ...(params.offerId !== undefined ? { offer: new ObjectId(params.offerId) } : {}),
         ...(params.isAwarded !== undefined ? { isAwarded: params.isAwarded } : {}),
       })
       .lean()

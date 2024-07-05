@@ -23,7 +23,8 @@
       "@user/*": ["./src/user/*"],
       "@portfolio/*": ["./src/portfolio/*"],
       "@auth/*": ["./src/auth/*"],
-      "@core/*": ["./src/core/*"]
+      "@core/*": ["./src/core/*"],
+      "@tournament/*": ["./src/tournament/*"],
     }
   }
 }

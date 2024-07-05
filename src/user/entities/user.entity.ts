@@ -7,8 +7,8 @@ export interface UserEntity {
   getFid(): number;
   getName(): string;
   getImageUrl(): string;
-  getBalance(): number;
-  getPoints(): number;
+  getCoinsBalance(): number;
+  getEnergy(): number;
 }
 
 export class MongoUserEntity implements UserEntity {
@@ -30,11 +30,11 @@ export class MongoUserEntity implements UserEntity {
     return this.userDocument.imageUrl;
   }
 
-  public getBalance() {
-    return this.userDocument.balance;
+  public getCoinsBalance() {
+    return this.userDocument.coinsBalance;
   }
 
-  public getPoints() {
-    return this.userDocument.points;
+  public getEnergy() {
+    return this.userDocument.energy;
   }
 }
