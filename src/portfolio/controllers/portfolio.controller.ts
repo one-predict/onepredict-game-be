@@ -5,10 +5,13 @@ import { PortfolioService } from '@portfolio/services';
 import { InjectPortfolioService } from '@portfolio/decorators';
 import { CreatePortfolioDto, ListPortfoliosDto, CreatePortfolioForCurrentUserDto } from '@portfolio/dto';
 import { ParseIdentifiersArrayPipe } from '@common/pipes';
+import { PortfolioEntity } from '@app/portfolio';
 
 @Controller()
 export default class PortfolioController {
-  constructor(@InjectPortfolioService() private readonly portfolioService: PortfolioService) {}
+  constructor(@InjectPortfolioService() private readonly portfolioService: PortfolioService) {
+    this.mapPortfolioEntityToViewModel = this.mapPortfolioEntityToViewModel.bind(this);
+  }
 
   @Get('/portfolios')
   @UseGuards(AuthGuard)
@@ -18,17 +21,7 @@ export default class PortfolioController {
   ) {
     const portfolios = await this.portfolioService.listForUserAndOffers(session.get('userId'), offerIds);
 
-    return portfolios.map((portfolio) => {
-      return {
-        id: portfolio.getId(),
-        offerId: portfolio.getOfferId(),
-        userId: portfolio.getUserId(),
-        selectedTokens: portfolio.getSelectedTokens(),
-        earnedPoints: portfolio.getEarnedPoints(),
-        isAwarded: portfolio.isAwarded(),
-        createdAt: portfolio.getCreatedAt(),
-      };
-    });
+    return portfolios.map(this.mapPortfolioEntityToViewModel);
   }
 
   @Post('/portfolios')
@@ -43,15 +36,7 @@ export default class PortfolioController {
       offerId: createUserDto.offerId,
     });
 
-    return {
-      id: portfolio.getId(),
-      offerId: portfolio.getOfferId(),
-      userId: portfolio.getUserId(),
-      earnedPoints: portfolio.getEarnedPoints(),
-      selectedTokens: portfolio.getSelectedTokens(),
-      isAwarded: portfolio.isAwarded(),
-      createdAt: portfolio.getCreatedAt(),
-    };
+    return this.mapPortfolioEntityToViewModel(portfolio);
   }
 
   // GRPC Style
@@ -63,17 +48,7 @@ export default class PortfolioController {
       offerIds: body.offerIds,
     });
 
-    return portfolios.map((portfolio) => {
-      return {
-        id: portfolio.getId(),
-        offerId: portfolio.getOfferId(),
-        userId: portfolio.getUserId(),
-        selectedTokens: portfolio.getSelectedTokens(),
-        earnedPoints: portfolio.getEarnedPoints(),
-        isAwarded: portfolio.isAwarded(),
-        createdAt: portfolio.getCreatedAt(),
-      };
-    });
+    return portfolios.map(this.mapPortfolioEntityToViewModel);
   }
 
   // GRPC Style
@@ -86,12 +61,16 @@ export default class PortfolioController {
       selectedTokens: body.selectedTokens,
     });
 
+    return this.mapPortfolioEntityToViewModel(portfolio);
+  }
+
+  private mapPortfolioEntityToViewModel(portfolio: PortfolioEntity) {
     return {
       id: portfolio.getId(),
       offerId: portfolio.getOfferId(),
       userId: portfolio.getUserId(),
-      earnedPoints: portfolio.getEarnedPoints(),
       selectedTokens: portfolio.getSelectedTokens(),
+      earnedCoins: portfolio.getEarnedCoins(),
       isAwarded: portfolio.isAwarded(),
       createdAt: portfolio.getCreatedAt(),
     };

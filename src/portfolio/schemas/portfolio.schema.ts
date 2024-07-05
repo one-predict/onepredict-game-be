@@ -26,7 +26,7 @@ export class Portfolio {
   offer: ObjectId;
 
   @Prop({ required: false, type: mongoose.Schema.Types.Number })
-  earnedPoints?: number;
+  earnedCoins?: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Boolean })
   isAwarded: boolean;

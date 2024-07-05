@@ -15,6 +15,7 @@ export interface FindPortfolioOfferEntitiesParams {
 export interface CreatePortfolioOfferEntityParams {
   day: number;
   date: string;
+  offerStatus: OfferStatus;
   tokenOffers: TokenOffer[];
 }
 

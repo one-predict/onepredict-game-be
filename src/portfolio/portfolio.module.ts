@@ -9,6 +9,7 @@ import { PortfolioController, PortfolioOfferController } from '@portfolio/contro
 import { MongoPortfolioRepository, MongoPortfolioOfferRepository } from '@portfolio/repositories';
 import { CoinGeckoApi } from '@portfolio/api';
 import { UserModule } from '@app/user';
+import { TournamentModule } from '@app/tournament';
 import PortfolioModuleTokens from './portfolio.module.tokens';
 
 @Module({
@@ -16,6 +17,7 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     MongooseModule.forFeature([{ name: Portfolio.name, schema: PortfolioSchema }]),
     MongooseModule.forFeature([{ name: PortfolioOffer.name, schema: PortfolioOfferSchema }]),
     UserModule,
+    TournamentModule,
     ConfigModule,
     HttpModule,
     CoreModule,
