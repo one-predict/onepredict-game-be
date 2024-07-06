@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb';
+import { nanoid } from 'nanoid';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -6,7 +7,7 @@ import { Battle } from '../schemas/battle.schema';
 import { BattleEntity, MongoBattleEntity } from '../entities/battle.entity';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
-import {PortfolioOffer} from "@portfolio/schemas";
+import { PortfolioOffer } from "@portfolio/schemas";
 
 interface FindBattleEntityParams {
   ownerId?: string;
@@ -55,7 +56,7 @@ export class MongoBattleRepository implements BattleRepository {
   async create(params: CreateBattleEntityParams) {
     const portfolioDocument = await this.battleModel.create({
       ...params,
-      battleId: new ObjectId().toHexString(),
+      battleId: nanoid(),
       participants: [params.ownerId],
     });
 

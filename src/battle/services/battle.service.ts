@@ -7,6 +7,8 @@ import { getCurrentDayInUtc } from '@common/utils';
 import { BattleRepository } from '@app/battle/repositories/battle.repository';
 import { InjectBattleRepository } from '@app/battle/decorators';
 import { BattleEntity } from '@app/battle/entities/battle.entity';
+import { InjectTransactionsManagerDecorator } from '@core/decorators';
+import { TransactionsManager } from '@core/managers';
 
 export type GetBattleParams = Pick<BattleEntity, 'offerId' | 'ownerId'>;
 export type CreateBattleParams = Pick<BattleEntity, 'offerId' | 'ownerId' | 'entryPrice'>;
@@ -25,6 +27,7 @@ export class BattleServiceImpl implements BattleService {
     @InjectPortfolioOfferService() private readonly portfolioOfferService: PortfolioOfferService,
     @InjectUserService() private readonly userService: UserService,
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
+    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   getBattleForOwner(params: GetBattleParams) {
@@ -41,9 +44,20 @@ export class BattleServiceImpl implements BattleService {
       throw new BadRequestException('Provided battle is not found');
     }
 
-    const players = new Set([...battle.participants, ...userIds]);
+    const players = [...new Set([...battle.participants, ...userIds])];
 
-    return this.battleRepository.updateOneById(battle.id, { participants: [...players] });
+    let updatedBattle: BattleEntity | null = null;
+
+    await this.transactionsManager.useTransaction(async () => {
+      for (const player of players) {
+        await this.userService.withdrawCoins(player, battle.entryPrice);
+      }
+
+      updatedBattle = await this.battleRepository.updateOneById(battle.id, { participants: players });
+
+    });
+
+    return updatedBattle;
   }
 
   getByBattleId(battleId: string) {
@@ -76,10 +90,21 @@ export class BattleServiceImpl implements BattleService {
       throw new BadRequestException('Portfolio for this day is not found.');
     }
 
-    return this.battleRepository.create({
-      ownerId: params.ownerId,
-      offerId: params.offerId,
-      entryPrice: params.entryPrice,
+    let createdBattle: BattleEntity | null = null;
+
+    await this.transactionsManager.useTransaction(async () => {
+
+      await this.userService.withdrawCoins(params.ownerId, params.entryPrice);
+
+
+      createdBattle = await this.battleRepository.create({
+        ownerId: params.ownerId,
+        offerId: params.offerId,
+        entryPrice: params.entryPrice,
+      });
     });
+
+    return createdBattle;
+
   }
 }
