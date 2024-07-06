@@ -6,6 +6,7 @@ import { Battle } from '../schemas/battle.schema';
 import { BattleEntity, MongoBattleEntity } from '../entities/battle.entity';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
+import {PortfolioOffer} from "@portfolio/schemas";
 
 interface FindBattleEntityParams {
   ownerId?: string;
@@ -28,6 +29,10 @@ export class MongoBattleRepository implements BattleRepository {
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
+  private async getPopulatedBattleById(battleId: string) {
+    return await this.find({ battleId });
+  }
+
   async find(params: FindBattleEntityParams): Promise<BattleEntity> {
     const battleDocument = await this.battleModel
       .findOne({
@@ -35,10 +40,16 @@ export class MongoBattleRepository implements BattleRepository {
         ...(params.offerId && { offerId: new ObjectId(params.offerId) }),
         ...(params.battleId && { battleId: params.battleId }),
       })
+      .populate([
+        {
+          path: 'offerId',
+          model: PortfolioOffer.name,
+        },
+      ])
       .lean()
       .exec();
 
-    return battleDocument && new MongoBattleEntity(battleDocument);
+    return battleDocument && new MongoBattleEntity(battleDocument).getBattle();
   }
 
   async create(params: CreateBattleEntityParams) {
@@ -48,7 +59,7 @@ export class MongoBattleRepository implements BattleRepository {
       participants: [params.ownerId],
     });
 
-    return new MongoBattleEntity(portfolioDocument);
+    return this.getPopulatedBattleById(portfolioDocument.battleId);
   }
 
   async updateOneById(id: string, params: Partial<BattleEntity>) {
@@ -63,6 +74,6 @@ export class MongoBattleRepository implements BattleRepository {
       .lean()
       .exec();
 
-    return document && new MongoBattleEntity(document);
+    return document && this.getPopulatedBattleById(document.battleId);
   }
 }
