@@ -15,9 +15,9 @@ export type CreateBattleParams = Pick<BattleEntity, 'offerId' | 'ownerId' | 'ent
 
 export interface BattleService {
   getBattleForOwner(params: GetBattleParams): Promise<BattleEntity>;
-  getByBattleId(battleId: string): Promise<BattleEntity>;
+  getByDisplayId(battleId: string): Promise<BattleEntity>;
   create(params: CreateBattleParams): Promise<BattleEntity>;
-  addPlayers(battleId: string, userIds: string[]): Promise<BattleEntity>;
+  addPlayer(battleId: string, userId: string): Promise<BattleEntity>;
 }
 
 @Injectable()
@@ -37,31 +37,31 @@ export class BattleServiceImpl implements BattleService {
     });
   }
 
-  async addPlayers(battleId: string, userIds: string[]) {
-    const battle = await this.getByBattleId(battleId);
+  async addPlayer(battleId: string, userId: string) {
+    const battle = await this.getByDisplayId(battleId);
 
     if (!battle) {
       throw new BadRequestException('Provided battle is not found');
     }
 
-    const players = [...new Set([...battle.participants, ...userIds])];
+    if (battle.players.some(player => player.userId === userId)) {
+      throw new BadRequestException('User is already in the battle');
+    }
+
+    const players = [...battle.players, { userId, points: 0 }];
 
     let updatedBattle: BattleEntity | null = null;
 
     await this.transactionsManager.useTransaction(async () => {
-      for (const player of players) {
-        await this.userService.withdrawCoins(player, battle.entryPrice);
-      }
-
-      updatedBattle = await this.battleRepository.updateOneById(battle.id, { participants: players });
-
+      await this.userService.withdrawCoins(userId, battle.entryPrice);
+      updatedBattle = await this.battleRepository.updateOneById(battle.id, { players });
     });
 
     return updatedBattle;
   }
 
-  getByBattleId(battleId: string) {
-    return this.battleRepository.find({ battleId });
+  getByDisplayId(displayId: string) {
+    return this.battleRepository.find({ displayId });
   }
 
   public async create(params: CreateBattleParams) {

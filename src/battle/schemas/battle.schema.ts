@@ -3,11 +3,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { User } from '@user/schemas';
 import { PortfolioOffer } from '@portfolio/schemas';
+import { BattlePlayer } from '@app/battle/entities/battle.entity';
 
 @Schema()
 export class Battle {
   @Prop({ required: true, type: mongoose.Schema.Types.String })
-  battleId: string;
+  displayId: string;
 
   @Prop({
     required: true,
@@ -24,10 +25,13 @@ export class Battle {
   offerId: ObjectId;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
+  staticPrizePool: number;
+
+  @Prop({ required: true, type: mongoose.Schema.Types.Number })
   entryPrice: number;
 
-  @Prop([{ required: true, type: mongoose.Schema.Types.String }])
-  participants: string[];
+  @Prop([{ required: true, type: mongoose.Schema.Types.Mixed }])
+  players: BattlePlayer[];
 }
 
 export const BattleSchema = SchemaFactory.createForClass(Battle);

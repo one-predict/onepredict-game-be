@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { IsIdentifier } from '@common/class-validators';
 
 export class GetBattleDto {
@@ -9,19 +9,19 @@ export class GetBattleDto {
   offerId: string;
 }
 
-export class AddPlayersDto {
+export class AddPlayerDto {
   @IsNotEmpty()
-  battleId: string;
+  @IsString()
+  displayId: string;
 
   @IsNotEmpty()
-  @IsArray()
-  @IsString({ each: true })
-  userIds: string[];
+  @IsString()
+  userId: string;
 }
 
-export class GetByBattleIdDto {
+export class GetByDisplayIdDto {
   @IsNotEmpty()
-  battleId: string;
+  displayId: string;
 }
 
 export class CreateBattlePayloadDto {

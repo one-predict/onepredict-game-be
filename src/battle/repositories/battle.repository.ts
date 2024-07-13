@@ -12,7 +12,7 @@ import { PortfolioOffer } from "@portfolio/schemas";
 interface FindBattleEntityParams {
   ownerId?: string;
   offerId?: string;
-  battleId?: string;
+  displayId?: string;
 }
 
 export type CreateBattleEntityParams = Pick<BattleEntity, 'ownerId' | 'offerId' | 'entryPrice'>;
@@ -30,16 +30,12 @@ export class MongoBattleRepository implements BattleRepository {
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  private async getPopulatedBattleById(battleId: string) {
-    return await this.find({ battleId });
-  }
-
   async find(params: FindBattleEntityParams): Promise<BattleEntity> {
     const battleDocument = await this.battleModel
       .findOne({
         ...(params.ownerId && { ownerId: new ObjectId(params.ownerId) }),
         ...(params.offerId && { offerId: new ObjectId(params.offerId) }),
-        ...(params.battleId && { battleId: params.battleId }),
+        ...(params.displayId && { displayId: params.displayId }),
       })
       .populate([
         {
@@ -54,13 +50,19 @@ export class MongoBattleRepository implements BattleRepository {
   }
 
   async create(params: CreateBattleEntityParams) {
-    const portfolioDocument = await this.battleModel.create({
+    const payload: Partial<BattleEntity> = {
       ...params,
-      battleId: nanoid(),
-      participants: [params.ownerId],
-    });
+      displayId: nanoid(),
+      staticPrizePool: 0,
+      players: [{
+        userId: params.ownerId,
+        points: 0,
+      }],
+    };
 
-    return this.getPopulatedBattleById(portfolioDocument.battleId);
+    const portfolioDocument = await this.battleModel.create(payload);
+
+    return this.getPopulatedBattleByDisplayId(portfolioDocument.displayId);
   }
 
   async updateOneById(id: string, params: Partial<BattleEntity>) {
@@ -75,6 +77,10 @@ export class MongoBattleRepository implements BattleRepository {
       .lean()
       .exec();
 
-    return document && this.getPopulatedBattleById(document.battleId);
+    return document && this.getPopulatedBattleByDisplayId(document.displayId);
+  }
+
+  private async getPopulatedBattleByDisplayId(displayId: string) {
+    return await this.find({ displayId });
   }
 }

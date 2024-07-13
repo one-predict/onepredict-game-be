@@ -3,7 +3,7 @@ import { PrivateApiAuthorizationTokenGuard } from '@common/guards';
 import { InjectPortfolioOfferService, PortfolioOfferService } from '@app/portfolio';
 import { BattleService } from '@app/battle/services/battle.service';
 import { InjectBattleService } from '@app/battle/decorators';
-import { GetBattleDto, CreateBattlePayloadDto, GetByBattleIdDto, AddPlayersDto } from '../dto';
+import { GetBattleDto, CreateBattlePayloadDto, GetByDisplayIdDto, AddPlayerDto } from '../dto';
 import { BattleEntity } from '@app/battle/entities/battle.entity';
 
 @Controller()
@@ -19,10 +19,10 @@ export default class BattleController {
     return this.battleService.getBattleForOwner({ ownerId: params.ownerId, offerId: params.offerId });
   }
 
-  @Post('/battles/getByBattleId')
+  @Post('/battles/getByDisplayId')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async getBattleByBattleId(@Body() params: GetByBattleIdDto): Promise<BattleEntity> {
-    return await this.battleService.getByBattleId(params.battleId);
+  public async getBattleByBattleId(@Body() params: GetByDisplayIdDto): Promise<BattleEntity> {
+    return await this.battleService.getByDisplayId(params.displayId);
   }
 
   @Post('/battles')
@@ -33,7 +33,7 @@ export default class BattleController {
 
   @Post('/battles/addPlayers')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async addPlayers(@Body() params: AddPlayersDto) {
-    return await this.battleService.addPlayers(params.battleId, params.userIds);
+  public async addPlayers(@Body() params: AddPlayerDto) {
+    return await this.battleService.addPlayer(params.displayId, params.userId);
   }
 }
