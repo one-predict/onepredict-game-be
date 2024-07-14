@@ -8,7 +8,7 @@ import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
 
 interface FindPortfolioEntitiesParams {
-  userId?: string;
+  userId?: string | string[];
   offerIds?: string[];
   offerId?: string;
   isAwarded?: boolean;
@@ -41,9 +41,11 @@ export class MongoPortfolioRepository implements PortfolioRepository {
   ) {}
 
   public async find(params: FindPortfolioEntitiesParams): Promise<PortfolioEntity[]> {
-    const portfolioDocuments = await this.portfolioModel
+      const userIds = Array.isArray(params.userId) ? params.userId : [params.userId];
+
+      const portfolioDocuments = await this.portfolioModel
       .find({
-        ...(params.userId !== undefined ? { user: new ObjectId(params.userId) } : {}),
+        ...(params.userId !== undefined ? { user: { $in: userIds.map((userId) => new ObjectId(userId)) } } : {}),
         ...(params.offerIds
           ? {
               offer: {

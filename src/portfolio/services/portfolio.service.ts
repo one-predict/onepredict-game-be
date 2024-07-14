@@ -5,11 +5,13 @@ import { PortfolioRepository } from '@portfolio/repositories';
 import { PortfolioEntity, PortfolioOfferEntity } from '@portfolio/entities';
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectUserService, UserService } from '@app/user';
-import { getCurrentDayInUtc } from '@common/utils';
+import { getBattlePortfoliosRewards, getCurrentDayInUtc } from '@common/utils';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
 import { InjectTournamentParticipationService, InjectTournamentService } from '@tournament/decorators';
 import { TournamentParticipationService, TournamentService } from '@tournament/services';
+import { InjectBattleService } from "@app/battle/decorators";
+import { BattleService } from "@app/battle/services";
 
 export interface ListPortfoliosParams {
   userId?: string;
@@ -37,6 +39,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     @InjectTournamentParticipationService()
     private readonly tournamentParticipationService: TournamentParticipationService,
     @InjectUserService() private readonly userService: UserService,
+    @InjectBattleService() private readonly battleService: BattleService,
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
@@ -145,6 +148,12 @@ export class PortfolioServiceImpl implements PortfolioService {
         await this.portfolioOfferService.markOfferCompleted(offer.getId());
 
         Logger.log(`Offer ${offer.getId()} completed, updated ${portfolios.length} portfolios.`);
+
+        try {
+          await this.distributeBattlePointsForOffer(offer.getId());
+        } catch (error) {
+          Logger.error(`Failed to distribute battle points for offer: ${offer.getId()}`, error);
+        }
       } catch (error) {
         Logger.error(`Failed to award portfolios for offer: ${offer.getId()}`, error);
       }
@@ -161,5 +170,55 @@ export class PortfolioServiceImpl implements PortfolioService {
     return selectedTokens.every((token, index) => {
       return tokenOffers[index].firstToken === token || tokenOffers[index].secondToken === token;
     });
+  }
+
+  private async distributeBattlePointsForOffer(offerId: string) {
+    const battles = await this.battleService.findAllByOfferId(offerId);
+
+    for (const battle of battles) {
+      const portfolios = await this.portfolioRepository.find({
+        userId: battle.players.map(( { userId } ) => userId),
+        offerIds: [battle.offerId],
+      });
+
+      if (!portfolios.length) {
+        Logger.log(`No portfolios found for battle ${battle.id}`);
+        continue;
+      }
+
+      if (portfolios.length === 1) {
+        const userId = portfolios[0].getUserId();
+        Logger.log(`Only 1 portfolio found for battle ${battle.id}, coins will be returned to user #${userId}.`);
+        await this.userService.addCoins(userId, battle.entryPrice);
+        continue;
+      }
+
+      const winnerPortfolios = getBattlePortfoliosRewards(portfolios, battle.entryPrice);
+
+      for (const winnerPortfolio of winnerPortfolios) {
+        await this.userService.addCoins(winnerPortfolio.userId, winnerPortfolio.rewards);
+        Logger.log(
+            `User #${winnerPortfolio.userId}  won ${winnerPortfolio.rewards} coins.`,
+        );
+      }
+
+      const players = battle.players.map((player) => {
+        const winner = winnerPortfolios.find((winnerPortfolio) => winnerPortfolio.userId === player.userId);
+
+        if (winner) {
+          const battlePoints = winner.rewards - battle.entryPrice;
+
+          return {
+            ...player,
+            points: battlePoints,
+          };
+        }
+
+        return player;
+      });
+
+      await this.battleService.update(battle.id, { players });
+      Logger.log(`Battle ${battle.id} completed, updated ${players.length} players.`);
+    }
   }
 }

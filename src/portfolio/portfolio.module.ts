@@ -11,12 +11,14 @@ import { CoinGeckoApi } from '@portfolio/api';
 import { UserModule } from '@app/user';
 import { TournamentModule } from '@app/tournament';
 import PortfolioModuleTokens from './portfolio.module.tokens';
+import { BattleModule } from "@app/battle/battle.module";
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Portfolio.name, schema: PortfolioSchema }]),
     MongooseModule.forFeature([{ name: PortfolioOffer.name, schema: PortfolioOfferSchema }]),
     UserModule,
+    BattleModule,
     TournamentModule,
     ConfigModule,
     HttpModule,

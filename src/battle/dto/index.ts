@@ -37,3 +37,12 @@ export class CreateBattlePayloadDto {
   @IsNumber()
   entryPrice: number;
 }
+
+export class GetUsersBattlesByOfferDto {
+  @IsIdentifier()
+  userId: string;
+
+  @IsIdentifier()
+  offerId: string;
+}
+
