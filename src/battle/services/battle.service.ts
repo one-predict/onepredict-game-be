@@ -8,7 +8,7 @@ export type CreateBattleParams = Pick<BattleEntity, 'offerId' | 'ownerId' | 'ent
 
 export interface BattleService {
   getBattleForOwner(params: GetBattleParams): Promise<BattleEntity>;
-  getByDisplayId(battleId: string): Promise<BattleEntity>;
+  getByDisplayId(displayId: string): Promise<BattleEntity>;
   create(params: CreateBattleParams): Promise<BattleEntity>;
   update(id: string, params: Partial<BattleEntity>): Promise<BattleEntity>;
   findAllByOfferId(offerId: string): Promise<BattleEntity[]>;

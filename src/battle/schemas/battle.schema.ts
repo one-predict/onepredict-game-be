@@ -36,4 +36,4 @@ export class Battle {
 
 export const BattleSchema = SchemaFactory.createForClass(Battle);
 
-BattleSchema.index({ battleId: 1 }, { unique: true });
+BattleSchema.index({ displayId: 1 }, { unique: true });

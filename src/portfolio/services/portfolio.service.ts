@@ -188,7 +188,7 @@ export class PortfolioServiceImpl implements PortfolioService {
 
       if (portfolios.length === 1) {
         const userId = portfolios[0].getUserId();
-        Logger.log(`Only 1 portfolio found for battle ${battle.id}, coins will be returned to user #${userId}.`);
+        Logger.log(`Only 1 portfolio found for battle ${battle.id}, coins(${battle.entryPrice}) will be returned to user #${userId}.`);
         await this.userService.addCoins(userId, battle.entryPrice);
         continue;
       }
