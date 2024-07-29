@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 interface VerifySignInMessageParams {
   message: string;
-  name: string;
+  username: string;
   pfp: string;
   signature: `0x${string}`;
   nonce: string;
@@ -45,17 +45,16 @@ export class AuthServiceImpl implements AuthService {
     if (!user) {
       const user = await this.userService.create({
         fid,
-        name: params.name,
+        username: params.username,
         imageUrl: params.pfp,
-        balance: 0,
       });
 
       return { fid, user };
     }
 
-    if (user.getName() !== params.name || user.getImageUrl() !== params.pfp) {
+    if (user.getUsername() !== params.username || user.getImageUrl() !== params.pfp) {
       await this.userService.update(user.getId(), {
-        name: params.name,
+        username: params.username,
         imageUrl: params.pfp,
       });
     }

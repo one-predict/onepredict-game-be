@@ -19,5 +19,5 @@ export class SignInDto {
 
   @IsNotEmpty()
   @IsString()
-  name: string;
+  username: string;
 }

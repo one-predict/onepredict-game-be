@@ -4,7 +4,7 @@ import { getCurrentDayInUtc } from '@common/utils';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
 import { InjectTournamentParticipationRepository, InjectTournamentService } from '@tournament/decorators';
-import { TournamentParticipationRepository } from '@tournament/repositories';
+import {TournamentLeaderboard, TournamentParticipationRepository} from '@tournament/repositories';
 import { TournamentService } from '@tournament/services';
 import { TournamentParticipationEntity } from '@tournament/entities';
 
@@ -22,7 +22,8 @@ export interface TournamentParticipationService {
   create(params: CreateTournamentParticipationParams): Promise<void>;
   getUserRankForTournament(userId: string, tournamentId: string): Promise<number>;
   getUserParticipationForTournament(userId: string, tournamentId: string): Promise<TournamentParticipationEntity>;
-  bulkAddPoints(participationIds: string[], points: number): Promise<void>;
+  getLeaderboard(tournamentId: string): Promise<TournamentLeaderboard>;
+  bulkAddPoints(tournamentIds: string[], userId: string, points: number): Promise<void>;
 }
 
 @Injectable()
@@ -49,7 +50,7 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
 
       const currentDay = getCurrentDayInUtc();
 
-      if (currentDay >= tournament.getEndDay() - 1) {
+      if (currentDay >= tournament.getEndDay()) {
         throw new UnprocessableEntityException('Tournament is not available for participation.');
       }
 
@@ -73,11 +74,15 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     });
   }
 
+  public getLeaderboard(tournamentId: string) {
+    return this.tournamentParticipationRepository.getLeaderboard(tournamentId);
+  }
+
   public async getUserRankForTournament(userId: string, tournamentId: string) {
     return this.tournamentParticipationRepository.getRank(tournamentId, userId);
   }
 
-  public async bulkAddPoints(participationIds: string[], points: number) {
-    await this.tournamentParticipationRepository.bulkAddPoints(participationIds, points);
+  public async bulkAddPoints(tournamentIds: string[], userId: string, points: number) {
+    await this.tournamentParticipationRepository.bulkAddPoints(tournamentIds, userId, points);
   }
 }

@@ -5,10 +5,9 @@ import { User } from '@user/schemas';
 export interface UserEntity {
   getId(): string;
   getFid(): number;
-  getName(): string;
+  getUsername(): string;
   getImageUrl(): string;
   getCoinsBalance(): number;
-  getEnergy(): number;
 }
 
 export class MongoUserEntity implements UserEntity {
@@ -22,8 +21,8 @@ export class MongoUserEntity implements UserEntity {
     return this.userDocument.fid;
   }
 
-  public getName() {
-    return this.userDocument.name;
+  public getUsername() {
+    return this.userDocument.username;
   }
 
   public getImageUrl() {
@@ -32,9 +31,5 @@ export class MongoUserEntity implements UserEntity {
 
   public getCoinsBalance() {
     return this.userDocument.coinsBalance;
-  }
-
-  public getEnergy() {
-    return this.userDocument.energy;
   }
 }

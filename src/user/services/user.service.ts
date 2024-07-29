@@ -1,3 +1,4 @@
+import { round } from 'lodash';
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { UserRepository } from '@user/repositories';
 import { InjectUserRepository } from '@user/decorators';
@@ -7,13 +8,13 @@ import { TransactionsManager } from '@core/managers';
 
 export interface CreateUserParams {
   fid: number;
-  name?: string;
+  username?: string;
   imageUrl?: string;
-  balance?: number;
+  coinsBalance?: number;
 }
 
 export interface UpdateUserParams {
-  name?: string;
+  username?: string;
   imageUrl?: string;
 }
 
@@ -58,7 +59,7 @@ export class UserServiceImpl implements UserService {
 
   public update(id: string, params: UpdateUserParams) {
     return this.userRepository.updateById(id, {
-      ...(params.name ? { name: params.name } : {}),
+      ...(params.username ? { name: params.username } : {}),
       ...(params.imageUrl ? { imageUrl: params.imageUrl } : {}),
     });
   }
@@ -72,7 +73,7 @@ export class UserServiceImpl implements UserService {
       }
 
       await this.userRepository.updateById(userId, {
-        addCoins: coins,
+        coinsBalance: round(user.getCoinsBalance() + coins, 2),
       });
     });
   }
@@ -90,7 +91,7 @@ export class UserServiceImpl implements UserService {
       }
 
       await this.userRepository.updateById(userId, {
-        addCoins: -coins,
+        coinsBalance: round(user.getCoinsBalance() - coins, 2),
       });
     });
   }

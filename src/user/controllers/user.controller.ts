@@ -40,10 +40,7 @@ export default class UserController {
   @Post('/users/createUser')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
   public async createUser(@Body() body: CreateUserDto) {
-    const user = await this.userService.create({
-      fid: body.fid,
-      balance: 0,
-    });
+    const user = await this.userService.create({ fid: body.fid });
 
     return {
       user: user && this.mapUserEntityToViewModel(user),
@@ -54,10 +51,9 @@ export default class UserController {
     return {
       id: user.getId(),
       fid: user.getFid(),
-      name: user.getName(),
+      username: user.getUsername(),
       imageUrl: user.getImageUrl(),
       coinsBalance: user.getCoinsBalance(),
-      energy: user.getEnergy(),
     };
   }
 }

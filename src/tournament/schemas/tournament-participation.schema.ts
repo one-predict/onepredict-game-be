@@ -18,4 +18,4 @@ export class TournamentParticipation {
 
 export const TournamentParticipationSchema = SchemaFactory.createForClass(TournamentParticipation);
 
-TournamentParticipationSchema.index({ tournament: 1, user: 1 }, { unique: true });
+TournamentParticipationSchema.index({ user: 1, tournament: 1 }, { unique: true });

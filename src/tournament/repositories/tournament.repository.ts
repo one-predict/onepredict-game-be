@@ -8,6 +8,7 @@ import { Tournament } from '@tournament/schemas';
 import { MongoTournamentEntity, TournamentEntity } from '@tournament/entities';
 
 export interface TournamentRepository {
+  findLatest(limit: number): Promise<TournamentEntity[]>;
   findBetweenDays(startDay: number, endDay): Promise<TournamentEntity[]>;
   findById(id: string): Promise<TournamentEntity>;
   findByDisplayId(displayId: number): Promise<TournamentEntity>;
@@ -21,11 +22,27 @@ export class MongoTournamentRepository implements TournamentRepository {
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async findBetweenDays(startDay: number, endDay): Promise<TournamentEntity[]> {
+  public async findLatest(limit: number): Promise<TournamentEntity[]> {
+    const tournamentDocuments = await this.tournamentModel
+      .find({})
+      .sort({ startDay: -1 })
+      .limit(limit)
+      .lean()
+      .session(this.transactionsManager.getSession())
+      .exec();
+
+    return tournamentDocuments.map((tournamentDocument) => {
+      return new MongoTournamentEntity(tournamentDocument);
+    });
+  }
+
+  public async findBetweenDays(startDay: number, endDay: number): Promise<TournamentEntity[]> {
     const tournamentDocuments = await this.tournamentModel
       .find({
-        startDay: { $gte: startDay },
-        endDay: { $lte: endDay },
+        $and: [
+          { startDay: { $lte: new Date(endDay) } },
+          { endDay: { $gte: new Date(startDay) } },
+        ],
       })
       .lean()
       .session(this.transactionsManager.getSession())

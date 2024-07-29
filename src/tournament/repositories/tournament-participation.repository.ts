@@ -14,6 +14,15 @@ export interface CreateTournamentParticipationEntityParams {
   points: number;
 }
 
+export interface TournamentLeaderboard {
+  rankedParticipants: Array<{
+    id: string;
+    username: string;
+    imageUrl: string;
+    points: number;
+  }>;
+}
+
 export interface TournamentParticipationRepository {
   findByUserIdAndTournamentId(
     userId: string,
@@ -21,7 +30,8 @@ export interface TournamentParticipationRepository {
   ): Promise<MongoTournamentParticipationEntity | null>;
   existsByTournamentIdAndUserId(tournamentId: string, userId: string): Promise<boolean>;
   create(params: CreateTournamentParticipationEntityParams): Promise<MongoTournamentParticipationEntity>;
-  bulkAddPoints(participationIds: string[], points: number): Promise<void>;
+  getLeaderboard(tournamentId: string): Promise<TournamentLeaderboard>;
+  bulkAddPoints(tournamentIds: string[], userId: string, points: number): Promise<void>;
   getRank(tournamentId: string, userId: string): Promise<number>;
 }
 
@@ -29,7 +39,7 @@ export interface TournamentParticipationRepository {
 export class MongodbTournamentParticipationRepository implements TournamentParticipationRepository {
   public constructor(
     @InjectModel(TournamentParticipation.name)
-    private tournamentParticipationModel: Model<TournamentParticipation>,
+      private tournamentParticipationModel: Model<TournamentParticipation>,
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
@@ -57,6 +67,52 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
       user: new ObjectId(userId),
       tournament: new ObjectId(tournamentId),
     }).session(this.transactionsManager.getSession()).exec() as unknown as Promise<boolean>;
+  }
+
+  public async getLeaderboard(tournamentId: string) {
+    const participations: Array<{
+      _id: ObjectId;
+      user: {
+        _id: ObjectId;
+        username: string;
+        imageUrl: string;
+      };
+      points: number;
+    }> = await this.tournamentParticipationModel
+      .aggregate([
+        { $match: { tournament: new ObjectId(tournamentId) } },
+        { $sort: { points: -1, _id: 1 } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        {
+          $project: {
+            _id: 0,
+            user: {
+              _id: 1,
+              username: 1,
+              imageUrl: 1,
+            },
+            points: 1,
+          },
+        },
+      ])
+      .exec();
+
+    return {
+      rankedParticipants: participations.map((participation) => ({
+        id: participation.user._id.toString(),
+        username: participation.user.username,
+        imageUrl: participation.user.imageUrl,
+        points: participation.points,
+      })),
+    };
   }
 
   public async getRank(tournamentId: string, userId: string) {
@@ -100,15 +156,20 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
     return new MongoTournamentParticipationEntity(tournamentParticipationDocument);
   }
 
-  public async bulkAddPoints(participationIds: string[], points: number) {
+  public async bulkAddPoints(tournamentIds: string[], userId: string, points: number) {
     await this.tournamentParticipationModel
       .updateOne(
         {
-          _id: { $in: participationIds.map((id) => new ObjectId(id)) },
+          tournament: { $in: tournamentIds.map((id) => new ObjectId(id)) },
+          user: new ObjectId(userId),
         },
-        {
-          $inc: { points },
-        },
+        [{
+          $set: {
+            points: {
+              $round: [{ $add: ["$points", points] }, 2],
+            },
+          },
+        }],
         {
           session: this.transactionsManager.getSession(),
         },

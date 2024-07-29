@@ -17,7 +17,7 @@ export default class PortfolioController {
   @UseGuards(AuthGuard)
   public async getUserPortfolios(
     @Session() session: secureSession.Session,
-    @Query('offerIds', new ParseIdentifiersArrayPipe({ separator: ',', maxCount: 10 })) offerIds: string[],
+    @Query('offerIds', new ParseIdentifiersArrayPipe({ separator: ',', maxCount: 15 })) offerIds: string[],
   ) {
     const portfolios = await this.portfolioService.listForUserAndOffers(session.get('userId'), offerIds);
 

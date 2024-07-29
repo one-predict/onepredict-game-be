@@ -7,6 +7,7 @@ import { TournamentRepository } from '@tournament/repositories';
 
 export interface TournamentService {
   addParticipant(tournamentId: string): Promise<void>;
+  listLatest(): Promise<TournamentEntity[]>;
   listBetweenDays(startDay: number, endDay): Promise<TournamentEntity[]>;
   getById(id: string): Promise<TournamentEntity | null>;
   getByDisplayId(displayId: number): Promise<TournamentEntity | null>;
@@ -14,6 +15,8 @@ export interface TournamentService {
 
 @Injectable()
 export class TournamentServiceImpl implements TournamentService {
+  private LATEST_TOURNAMENTS_LIMIT = 30;
+
   constructor(
     @InjectTournamentRepository() private readonly tournamentRepository: TournamentRepository,
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
@@ -21,6 +24,10 @@ export class TournamentServiceImpl implements TournamentService {
 
   public async addParticipant(tournamentId: string) {
     await this.tournamentRepository.incrementParticipantsCount(tournamentId);
+  }
+
+  public async listLatest() {
+    return this.tournamentRepository.findLatest(this.LATEST_TOURNAMENTS_LIMIT);
   }
 
   public async listBetweenDays(startDay: number, endDay) {

@@ -9,14 +9,15 @@ import { TransactionsManager } from '@core/managers';
 
 interface CreateUserEntityParams {
   fid: number;
-  balance?: number;
-  name?: string;
+  coinsBalance?: number;
+  username?: string;
   imageUrl?: string;
 }
 
 interface UpdateUserEntityParams {
-  name?: string;
+  username?: string;
   imageUrl?: string;
+  coinsBalance?: number;
   addCoins?: number;
 }
 

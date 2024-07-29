@@ -12,13 +12,14 @@ import tokens from '@portfolio/data/tokens';
 export interface PortfolioOfferService {
   getById(id: string): Promise<PortfolioOfferEntity | null>;
   getByDay(day: number): Promise<PortfolioOfferEntity | null>;
-  listOffersForDays(days: number): Promise<PortfolioOfferEntity[]>;
+  listLatestOffers(): Promise<PortfolioOfferEntity[]>;
   listOffersWaitingForCompletion(): Promise<PortfolioOfferEntity[]>;
   markOfferCompleted(offerId: string): Promise<void>;
 }
 
 @Injectable()
 export class PortfolioOfferServiceImpl implements PortfolioOfferService {
+  private MAX_LATEST_DAYS_LIST = 10;
   private MAX_DAYS_THRESHOLD = 3;
   private OFFERS_TO_GENERATE = 7;
   private MAX_TOKEN_OFFERS = 6;
@@ -28,11 +29,11 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
     @InjectCoinsApi() readonly coinsApi: CoinsApi,
   ) {}
 
-  public listOffersForDays(days: number) {
+  public listLatestOffers() {
     const currentDay = getCurrentDayInUtc();
 
     return this.portfolioOfferRepository.find({
-      fromDay: currentDay - days,
+      fromDay: currentDay - this.MAX_LATEST_DAYS_LIST,
       toDay: currentDay + 1,
     });
   }

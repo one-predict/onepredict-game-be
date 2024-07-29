@@ -8,7 +8,7 @@ declare module '@fastify/secure-session' {
   interface SessionData {
     userId: string;
     fid: number;
-    name: string;
+    username: string;
     image: string;
   }
 }
@@ -23,13 +23,13 @@ export default class AuthController {
       message: body.message,
       signature: body.signature,
       nonce: body.nonce,
-      name: body.name,
+      username: body.username,
       pfp: body.pfp,
     });
 
     session.set('userId', user.getId());
     session.set('fid', fid);
-    session.set('name', body.name);
+    session.set('username', body.username);
     session.set('image', body.pfp);
 
     return { success: true };

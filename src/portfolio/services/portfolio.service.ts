@@ -1,3 +1,4 @@
+import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectPortfolioOfferService, InjectPortfolioRepository } from '@portfolio/decorators';
@@ -113,7 +114,7 @@ export class PortfolioServiceImpl implements PortfolioService {
 
         const portfolios = await this.portfolioRepository.find({
           offerId: offer.getId(),
-          isAwarded: true,
+          isAwarded: false,
         });
 
         for (const portfolio of portfolios) {
@@ -130,13 +131,14 @@ export class PortfolioServiceImpl implements PortfolioService {
           await this.transactionsManager.useTransaction(async () => {
             await this.portfolioRepository.updateOneById(portfolio.getId(), {
               isAwarded: true,
-              earnedCoins,
+              earnedCoins: round(earnedCoins, 2),
             });
 
             await this.userService.addCoins(portfolio.getUserId(), earnedCoins);
 
             await this.tournamentParticipationService.bulkAddPoints(
-              tournaments.map((participation) => participation.getId()),
+              tournaments.map((tournament) => tournament.getId()),
+              portfolio.getUserId(),
               earnedCoins,
             );
           });

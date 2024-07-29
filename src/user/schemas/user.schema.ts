@@ -11,11 +11,8 @@ export class User {
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
   coinsBalance: number;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 0 })
-  energy: number;
-
   @Prop()
-  name: string;
+  username: string;
 
   @Prop()
   imageUrl: string;
