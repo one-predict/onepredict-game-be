@@ -5,27 +5,33 @@ import { InjectUserRepository } from '@user/decorators';
 import { UserEntity } from '@user/entities';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
+import {ExternalUserType} from "@auth/enums";
 
 export interface CreateUserParams {
-  fid: number;
+  externalId: string | number;
+  externalType: ExternalUserType;
+  firstName?: string;
+  lastName?: string;
   username?: string;
-  imageUrl?: string;
+  avatarUrl?: string;
   coinsBalance?: number;
 }
 
 export interface UpdateUserParams {
   username?: string;
-  imageUrl?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
 }
 
 export interface UserService {
   getById(id: string): Promise<UserEntity | null>;
-  getByFid(fid: number): Promise<UserEntity | null>;
-  getByFidIfExists(fid: number): Promise<UserEntity>;
+  getByExternalId(externalId: string | number): Promise<UserEntity | null>;
+  getByExternalIdIfExists(externalId: string | number): Promise<UserEntity>;
   create(params: CreateUserParams): Promise<UserEntity>;
-  update(id: string, params: UpdateUserParams): Promise<UserEntity | null>;
-  withdrawCoins(userId: string, coins: number): Promise<void>;
-  addCoins(userId: string, coins: number): Promise<void>;
+  update(id: string, params: UpdateUserParams): Promise<UserEntity>;
+  withdrawCoins(id: string, coins: number): Promise<void>;
+  addCoins(id: string, coins: number): Promise<void>;
 }
 
 @Injectable()
@@ -39,12 +45,12 @@ export class UserServiceImpl implements UserService {
     return this.userRepository.findById(id);
   }
 
-  public getByFid(fid: number) {
-    return this.userRepository.findByFid(fid);
+  public getByExternalId(externalId: string | number) {
+    return this.userRepository.findByExternalId(externalId);
   }
 
-  public async getByFidIfExists(fid: number) {
-    const user = await this.getByFid(fid);
+  public async getByExternalIdIfExists(externalId: string | number) {
+    const user = await this.getByExternalId(externalId);
 
     if (!user) {
       throw new NotFoundException('User is not found.');
@@ -57,30 +63,38 @@ export class UserServiceImpl implements UserService {
     return this.userRepository.create(params);
   }
 
-  public update(id: string, params: UpdateUserParams) {
-    return this.userRepository.updateById(id, {
+  public async update(id: string, params: UpdateUserParams) {
+    const user = await this.userRepository.updateById(id, {
       ...(params.username ? { name: params.username } : {}),
-      ...(params.imageUrl ? { imageUrl: params.imageUrl } : {}),
+      ...(params.firstName ? { firstName: params.firstName } : {}),
+      ...(params.lastName ? { lastName: params.lastName } : {}),
+      ...(params.avatarUrl ? { avatarUrl: params.avatarUrl } : {}),
     });
+
+    if (!user) {
+      throw new NotFoundException('User is not found.');
+    }
+
+    return user;
   }
 
-  public async addCoins(userId: string, coins: number) {
+  public async addCoins(id: string, coins: number) {
     await this.transactionsManager.useTransaction(async () => {
-      const user = await this.getById(userId);
+      const user = await this.getById(id);
 
       if (!user) {
         throw new UnprocessableEntityException('Provided user is not found.');
       }
 
-      await this.userRepository.updateById(userId, {
+      await this.userRepository.updateById(id, {
         coinsBalance: round(user.getCoinsBalance() + coins, 2),
       });
     });
   }
 
-  public async withdrawCoins(userId: string, coins: number) {
+  public async withdrawCoins(id: string, coins: number) {
     await this.transactionsManager.useTransaction(async () => {
-      const user = await this.getById(userId);
+      const user = await this.getById(id);
 
       if (!user) {
         throw new UnprocessableEntityException('Provided user is not found.');
@@ -90,7 +104,7 @@ export class UserServiceImpl implements UserService {
         throw new UnprocessableEntityException('Not enough balance');
       }
 
-      await this.userRepository.updateById(userId, {
+      await this.userRepository.updateById(id, {
         coinsBalance: round(user.getCoinsBalance() - coins, 2),
       });
     });

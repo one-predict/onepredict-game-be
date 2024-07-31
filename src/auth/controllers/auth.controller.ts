@@ -7,9 +7,11 @@ import { SignInDto } from '@auth/dto';
 declare module '@fastify/secure-session' {
   interface SessionData {
     userId: string;
-    fid: number;
-    username: string;
-    image: string;
+    externalId: string | number;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
   }
 }
 
@@ -19,18 +21,14 @@ export default class AuthController {
 
   @Post('/auth/sign-in')
   public async signIn(@Session() session: secureSession.Session, @Body() body: SignInDto) {
-    const { fid, user } = await this.authService.verifySignInMessage({
-      message: body.message,
-      signature: body.signature,
-      nonce: body.nonce,
-      username: body.username,
-      pfp: body.pfp,
-    });
+    const user = await this.authService.signTelegramUser(body.signInMessage);
 
     session.set('userId', user.getId());
-    session.set('fid', fid);
-    session.set('username', body.username);
-    session.set('image', body.pfp);
+    session.set('externalId', user.getExternalId());
+    session.set('username', user.getUsername());
+    session.set('firstName', user.getFirstName());
+    session.set('lastName', user.getLastName());
+    session.set('avatarUrl', user.getAvatarUrl());
 
     return { success: true };
   }

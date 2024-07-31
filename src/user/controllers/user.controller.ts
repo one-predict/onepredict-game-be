@@ -2,7 +2,7 @@ import { Controller, Session, Get, Post, Body, UseGuards } from '@nestjs/common'
 import * as secureSession from '@fastify/secure-session';
 import { UserService } from '@user/services';
 import { InjectUserService } from '@user/decorators';
-import { CreateUserDto, GetUserByFidDto } from '@user/dto';
+import { CreateUserDto, GetUserByExternalIdDto } from '@user/dto';
 import { PrivateApiAuthorizationTokenGuard } from '@common/guards';
 import { UserEntity } from '@app/user';
 
@@ -12,13 +12,13 @@ export default class UserController {
 
   @Get('/users/current-user')
   public async getCurrentUser(@Session() session: secureSession.Session) {
-    const fid = session.get('fid');
+    const userId = session.get('userId');
 
-    if (!fid) {
+    if (!userId) {
       return { user: null };
     }
 
-    const user = await this.userService.getByFid(fid);
+    const user = await this.userService.getById(userId);
 
     return {
       user: user && this.mapUserEntityToViewModel(user),
@@ -26,10 +26,10 @@ export default class UserController {
   }
 
   // GRPC Style
-  @Post('/users/getByFid')
+  @Post('/users/getByExternalId')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async getByFid(@Body() body: GetUserByFidDto) {
-    const user = await this.userService.getByFid(body.fid);
+  public async getByFid(@Body() body: GetUserByExternalIdDto) {
+    const user = await this.userService.getByExternalId(body.externalId);
 
     return {
       user: user && this.mapUserEntityToViewModel(user),
@@ -40,7 +40,14 @@ export default class UserController {
   @Post('/users/createUser')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
   public async createUser(@Body() body: CreateUserDto) {
-    const user = await this.userService.create({ fid: body.fid });
+    const user = await this.userService.create({
+      externalId: body.externalId,
+      externalType: body.externalType,
+      username: body.username,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      avatarUrl: body.avatarUrl,
+    });
 
     return {
       user: user && this.mapUserEntityToViewModel(user),
@@ -50,9 +57,12 @@ export default class UserController {
   private mapUserEntityToViewModel(user: UserEntity) {
     return {
       id: user.getId(),
-      fid: user.getFid(),
+      externalId: user.getExternalId(),
+      externalType: user.getExternalType(),
       username: user.getUsername(),
-      imageUrl: user.getImageUrl(),
+      firstName: user.getFirstName(),
+      lastName: user.getLastName(),
+      avatarUrl: user.getAvatarUrl(),
       coinsBalance: user.getCoinsBalance(),
     };
   }

@@ -6,23 +6,29 @@ import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
+import { ExternalUserType } from "@auth/enums";
 
 interface CreateUserEntityParams {
-  fid: number;
+  externalId: string | number;
+  externalType: ExternalUserType;
   coinsBalance?: number;
   username?: string;
-  imageUrl?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
 }
 
 interface UpdateUserEntityParams {
   username?: string;
-  imageUrl?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
   coinsBalance?: number;
   addCoins?: number;
 }
 
 export interface UserRepository {
-  findByFid(fid: number): Promise<UserEntity | null>;
+  findByExternalId(externalId: string | number): Promise<UserEntity | null>;
   findById(id: string): Promise<UserEntity | null>;
   create(params: CreateUserEntityParams): Promise<UserEntity>;
   updateById(id: string, params: UpdateUserEntityParams): Promise<UserEntity | null>;
@@ -35,9 +41,9 @@ export class MongoUserRepository implements UserRepository {
     @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async findByFid(fid: number) {
+  public async findByExternalId(externalId: string | number) {
     const user = await this.userModel
-      .findOne({ fid })
+      .findOne({ externalId })
       .lean()
       .session(this.transactionsManager.getSession())
       .exec();

@@ -25,7 +25,7 @@ import { LoggerMiddleware } from '@common/middlewares';
         COIN_GECKO_API_KEY: Joi.string().required(),
         COIN_GECKO_API_URL: Joi.string().required(),
         SESSIONS_SECRET: Joi.string().required(),
-        SESSIONS_MAX_AGE: Joi.number().default(86400),
+        TELEGRAM_BOT_TOKEN: Joi.string().required(),
         PRIVATE_API_AUTHORIZATION_SECRET: Joi.string().required(),
       }),
     }),

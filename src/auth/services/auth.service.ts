@@ -1,64 +1,59 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { createAppClient, viemConnector } from '@farcaster/auth-client';
-import { InjectUserService, UserEntity, UserService } from '@app/user';
-import { ConfigService } from '@nestjs/config';
-
-interface VerifySignInMessageParams {
-  message: string;
-  username: string;
-  pfp: string;
-  signature: `0x${string}`;
-  nonce: string;
-}
+import {ForbiddenException, Injectable} from '@nestjs/common';
+import {InjectUserService, UserEntity, UserService} from '@app/user';
+import {ConfigService} from '@nestjs/config';
+import {getTelegramInitDataFromSignInMessage, verifyTelegramSignInMessage} from "@auth/utils";
+import {ExternalUserType} from "@auth/enums";
 
 export interface AuthService {
-  verifySignInMessage(params: VerifySignInMessageParams): Promise<{ fid: number; user: UserEntity }>;
+  signTelegramUser(signInMessage: string): Promise<UserEntity>;
 }
 
 @Injectable()
 export class AuthServiceImpl implements AuthService {
-  private readonly appClient = createAppClient({
-    ethereum: viemConnector(),
-  });
-
   constructor(
     @InjectUserService() private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {}
 
-  public async verifySignInMessage(params: VerifySignInMessageParams) {
-    const verifyResponse = await this.appClient.verifySignInMessage({
-      nonce: params.nonce,
-      message: params.message,
-      signature: params.signature,
-      domain: this.configService.getOrThrow('AUTH_DOMAIN'),
-    });
+  public async signTelegramUser(signInMessage: string) {
+    const initData = getTelegramInitDataFromSignInMessage(signInMessage);
 
-    const { success, fid } = verifyResponse;
+    const isMessageValid = verifyTelegramSignInMessage(
+      signInMessage,
+      this.configService.get('TELEGRAM_BOT_TOKEN'),
+    );
 
-    if (!success) {
+    if (!isMessageValid || !initData.user) {
       throw new ForbiddenException('Authorization failed.');
     }
 
-    const user = await this.userService.getByFid(fid);
+    const user = await this.userService.getByExternalId(initData.user.id);
 
     if (!user) {
-      const user = await this.userService.create({
-        fid,
-        username: params.username,
-        imageUrl: params.pfp,
-      });
-
-      return { fid, user };
-    }
-
-    if (user.getUsername() !== params.username || user.getImageUrl() !== params.pfp) {
-      await this.userService.update(user.getId(), {
-        username: params.username,
-        imageUrl: params.pfp,
+      return this.userService.create({
+        externalId: initData.user.id,
+        externalType: ExternalUserType.Telegram,
+        username: initData.user.username,
+        firstName: initData.user.first_name,
+        lastName: initData.user.last_name,
+        avatarUrl: initData.user.photo_url,
       });
     }
 
-    return { fid, user };
+    if (
+      (user.getUsername() !== initData.user.username && initData.user.username) ||
+      (user.getFirstName() !== initData.user.first_name && initData.user.first_name)||
+      (user.getLastName() !== initData.user.last_name && initData.user.last_name) ||
+      (user.getAvatarUrl() !== initData.user.photo_url && initData.user.photo_url)
+    ) {
+      return this.userService.update(user.getId(), {
+        username: initData.user.username,
+        firstName: initData.user.first_name,
+        lastName: initData.user.last_name,
+        avatarUrl: initData.user.photo_url,
+      });
+    }
+
+    return user;
   }
 }
