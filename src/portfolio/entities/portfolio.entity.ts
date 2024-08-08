@@ -1,13 +1,13 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { Portfolio } from '@portfolio/schemas';
+import { Portfolio, SelectedPortfolioToken } from '@portfolio/schemas';
 
 export interface PortfolioEntity {
   getId(): string;
   getUserId(): string;
   getOfferId(): string;
   getCreatedAt(): Date;
-  getSelectedTokens(): string[];
+  getSelectedTokens(): SelectedPortfolioToken[];
   getEarnedCoins(): number;
   isAwarded(): boolean;
 }

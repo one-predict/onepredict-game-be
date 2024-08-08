@@ -7,6 +7,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
+import { PortfolioOfferEntity } from "@portfolio/entities";
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectPortfolioOfferService } from '@portfolio/decorators';
 
@@ -19,14 +20,7 @@ export default class PortfolioController {
   public async getPortfolioOffersForDays() {
     const portfolioOffers = await this.portfolioOfferService.listLatestOffers();
 
-    return portfolioOffers.map((portfolioOffer) => {
-      return {
-        id: portfolioOffer.getId(),
-        day: portfolioOffer.getDay(),
-        date: portfolioOffer.getDate(),
-        tokenOffers: portfolioOffer.getTokenOffers(),
-      };
-    });
+    return portfolioOffers.map((portfolioOffer) => this.mapPortfolioOfferEntityToViewModel(portfolioOffer));
   }
 
   // GRPC Style
@@ -36,12 +30,16 @@ export default class PortfolioController {
     const portfolioOffer = await this.portfolioOfferService.getByDay(day);
 
     return {
-      offer: portfolioOffer && {
-        id: portfolioOffer.getId(),
-        day: portfolioOffer.getDay(),
-        date: portfolioOffer.getDate(),
-        tokenOffers: portfolioOffer.getTokenOffers(),
-      },
+      offer: portfolioOffer && this.mapPortfolioOfferEntityToViewModel(portfolioOffer),
+    };
+  }
+
+  private mapPortfolioOfferEntityToViewModel(portfolioOffer: PortfolioOfferEntity) {
+    return {
+      id: portfolioOffer.getId(),
+      day: portfolioOffer.getDay(),
+      date: portfolioOffer.getDate(),
+      tokens: portfolioOffer.getTokens(),
     };
   }
 }

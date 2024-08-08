@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Portfolio } from '@portfolio/schemas';
+import { Portfolio, SelectedPortfolioToken } from '@portfolio/schemas';
 import { PortfolioEntity, MongoPortfolioEntity } from '@portfolio/entities';
 import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
@@ -16,7 +16,7 @@ interface FindPortfolioEntitiesParams {
 
 export interface CreatePortfolioEntityParams {
   user: string;
-  selectedTokens: string[];
+  selectedTokens: SelectedPortfolioToken[];
   offer: string;
   isAwarded: boolean;
 }

@@ -4,26 +4,10 @@ import { OfferStatus } from '@portfolio/enums';
 
 export type PortfolioOfferDocument = HydratedDocument<PortfolioOffer>;
 
-export interface TokenOffer {
-  firstToken: string;
-  secondToken: string;
-}
-
-const TokenOfferSchema = new mongoose.Schema(
-  {
-    firstToken: { type: String, required: true },
-    secondToken: { type: String, required: true },
-  },
-  { _id: false },
-);
-
 @Schema({ collection: 'portfolio_offers' })
 export class PortfolioOffer {
-  @Prop([{ required: true, type: TokenOfferSchema }])
-  tokenOffers: Array<{
-    firstToken: string;
-    secondToken: string;
-  }>;
+  @Prop([{ required: true, type: mongoose.Schema.Types.String }])
+  tokens: Array<string>;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   day: number;

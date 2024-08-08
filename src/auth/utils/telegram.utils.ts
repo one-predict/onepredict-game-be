@@ -6,7 +6,11 @@ export const getTelegramInitDataFromSignInMessage = (signInMessage: string) => {
   const initData = {};
 
   for (const [key, value] of signInSearchParams.entries()) {
-    initData[key] = value;
+    try {
+      initData[key] = JSON.parse(value);
+    } catch (error) {
+      initData[key] = value;
+    }
   }
 
   return initData as TelegramAppInitData;

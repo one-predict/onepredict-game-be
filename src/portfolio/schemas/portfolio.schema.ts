@@ -6,6 +6,21 @@ import { PortfolioOffer } from './portfolio-offer.schema';
 
 export type PortfolioDocument = HydratedDocument<Portfolio>;
 
+export type TokenDirection = 'growth' | 'falling';
+
+export interface SelectedPortfolioToken {
+  id: string;
+  direction: TokenDirection;
+}
+
+const SelectedPortfolioToken = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    direction: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 @Schema()
 export class Portfolio {
   @Prop({
@@ -15,8 +30,8 @@ export class Portfolio {
   })
   user: ObjectId;
 
-  @Prop([{ required: true, type: mongoose.Schema.Types.String }])
-  selectedTokens: string[];
+  @Prop([{ required: true, type: SelectedPortfolioToken }])
+  selectedTokens: SelectedPortfolioToken[];
 
   @Prop({
     required: true,

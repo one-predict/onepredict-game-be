@@ -73,12 +73,7 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
         day,
         offerStatus: OfferStatus.WaitingForPricing,
         date: getDateFromUtcDay(day),
-        tokenOffers: new Array(this.MAX_TOKEN_OFFERS).fill(null).map((_, index) => {
-          return {
-            firstToken: availableTokens[index * 2],
-            secondToken: availableTokens[index * 2 + 1],
-          };
-        }),
+        tokens: availableTokens,
       });
     }
 
@@ -102,18 +97,14 @@ export class PortfolioOfferServiceImpl implements PortfolioOfferService {
 
         let shouldSkipOffer = false;
 
-        for (const tokenOffer of offer.getTokenOffers()) {
-          await Promise.all(
-            [tokenOffer.firstToken, tokenOffer.secondToken].map(async (token) => {
-              const pricing = await this.coinsApi.getCoinPriceForDay(token as Coin, offer.getDay());
+        for (const token of offer.getTokens()) {
+          const pricing = await this.coinsApi.getCoinPriceForDay(token as Coin, offer.getDay());
 
-              if (!pricing) {
-                shouldSkipOffer = true;
-              }
+          if (!pricing) {
+            shouldSkipOffer = true;
+          }
 
-              pricingChanges[token] = calculatePercentageChange(pricing.startDayPrice, pricing.endDayPrice);
-            }),
-          );
+          pricingChanges[token] = calculatePercentageChange(pricing.startDayPrice, pricing.endDayPrice);
 
           if (shouldSkipOffer) {
             break;

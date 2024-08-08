@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { MatchRange } from '@common/data/aggregations';
-import { PortfolioOffer, TokenOffer } from '@portfolio/schemas';
+import { PortfolioOffer } from '@portfolio/schemas';
 import { MongoPortfolioOfferEntity, PortfolioOfferEntity } from '@portfolio/entities';
 import { OfferStatus } from '@portfolio/enums';
 
@@ -16,7 +16,7 @@ export interface CreatePortfolioOfferEntityParams {
   day: number;
   date: string;
   offerStatus: OfferStatus;
-  tokenOffers: TokenOffer[];
+  tokens: string[];
 }
 
 export interface UpdatePortfolioOfferEntityParams {
