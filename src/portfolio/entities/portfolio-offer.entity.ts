@@ -1,13 +1,13 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { PortfolioOffer, TokenOffer } from '@portfolio/schemas';
+import { PortfolioOffer } from '@portfolio/schemas';
 import { OfferStatus } from '@portfolio/enums';
 
 export interface PortfolioOfferEntity {
   getId(): string;
   getDay(): number;
   getDate(): string;
-  getTokenOffers(): TokenOffer[];
+  getTokens(): string[];
   getPriceChanges(): Record<string, number>;
   getOfferStatus(): OfferStatus;
 }
@@ -27,8 +27,8 @@ export class MongoPortfolioOfferEntity implements PortfolioOfferEntity {
     return this.portfolioOfferDocument.date;
   }
 
-  public getTokenOffers() {
-    return this.portfolioOfferDocument.tokenOffers;
+  public getTokens() {
+    return this.portfolioOfferDocument.tokens;
   }
 
   public getPriceChanges() {

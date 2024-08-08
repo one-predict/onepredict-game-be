@@ -11,6 +11,7 @@ import { InjectTransactionsManagerDecorator } from '@core/decorators';
 import { TransactionsManager } from '@core/managers';
 import { InjectTournamentParticipationService, InjectTournamentService } from '@tournament/decorators';
 import { TournamentParticipationService, TournamentService } from '@tournament/services';
+import {SelectedPortfolioToken} from "@portfolio/schemas";
 
 export interface ListPortfoliosParams {
   userId?: string;
@@ -19,7 +20,7 @@ export interface ListPortfoliosParams {
 
 export interface CreatePortfolioParams {
   userId: string;
-  selectedTokens: string[];
+  selectedTokens: SelectedPortfolioToken[];
   offerId: string;
 }
 
@@ -119,13 +120,13 @@ export class PortfolioServiceImpl implements PortfolioService {
 
         for (const portfolio of portfolios) {
           const earnedCoins = portfolio.getSelectedTokens().reduce((previousCoins, selectedToken) => {
-            const percentage = offerPriceChanges[selectedToken];
+            const percentage = offerPriceChanges[selectedToken.id];
 
             if (typeof percentage !== 'number') {
               throw new Error('Percentage change not found for token.');
             }
 
-            return previousCoins + percentage;
+            return previousCoins + (selectedToken.direction === 'falling' ? -percentage : percentage);
           }, 0);
 
           await this.transactionsManager.useTransaction(async () => {
@@ -153,15 +154,11 @@ export class PortfolioServiceImpl implements PortfolioService {
     }
   }
 
-  private validateSelectedTokens(selectedTokens: string[], offer: PortfolioOfferEntity) {
-    const tokenOffers = offer.getTokenOffers();
+  private validateSelectedTokens(selectedTokens: SelectedPortfolioToken[], offer: PortfolioOfferEntity) {
+    const offerTokens = offer.getTokens();
 
-    if (selectedTokens.length !== tokenOffers.length) {
-      throw new BadRequestException('Invalid number of selected tokens');
-    }
-
-    return selectedTokens.every((token, index) => {
-      return tokenOffers[index].firstToken === token || tokenOffers[index].secondToken === token;
+    return selectedTokens.every((token) => {
+      return offerTokens.includes(token.id);
     });
   }
 }

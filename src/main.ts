@@ -33,7 +33,6 @@ async function bootstrap() {
       httpOnly: true,
       path: '/',
       secure: true,
-      maxAge: parseInt(configService.getOrThrow<string>('SESSIONS_MAX_AGE')),
       sameSite: 'none',
     },
   });

@@ -28,12 +28,12 @@ export default class PortfolioController {
   @UseGuards(AuthGuard)
   public async createPortfolioForCurrentUser(
     @Session() session: secureSession.Session,
-    @Body() createUserDto: CreatePortfolioForCurrentUserDto,
+    @Body() createPortfolioForCurrentUserDto: CreatePortfolioForCurrentUserDto,
   ) {
     const portfolio = await this.portfolioService.create({
       userId: session.get('userId'),
-      selectedTokens: createUserDto.selectedTokens,
-      offerId: createUserDto.offerId,
+      selectedTokens: createPortfolioForCurrentUserDto.selectedTokens,
+      offerId: createPortfolioForCurrentUserDto.offerId,
     });
 
     return this.mapPortfolioEntityToViewModel(portfolio);

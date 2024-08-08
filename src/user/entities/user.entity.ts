@@ -1,12 +1,16 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { User } from '@user/schemas';
+import { ExternalUserType } from "@auth/enums";
 
 export interface UserEntity {
   getId(): string;
-  getFid(): number;
-  getUsername(): string;
-  getImageUrl(): string;
+  getExternalId(): string | number;
+  getExternalType(): ExternalUserType;
+  getFirstName(): string | undefined;
+  getLastName(): string | undefined;
+  getUsername(): string | undefined;
+  getAvatarUrl(): string | undefined;
   getCoinsBalance(): number;
 }
 
@@ -17,16 +21,28 @@ export class MongoUserEntity implements UserEntity {
     return this.userDocument._id.toString();
   }
 
-  public getFid() {
-    return this.userDocument.fid;
+  public getExternalId() {
+    return this.userDocument.externalId;
+  }
+
+  public getExternalType() {
+    return this.userDocument.externalType;
   }
 
   public getUsername() {
+    return this.userDocument.lastName
+  }
+
+  public getFirstName() {
     return this.userDocument.username;
   }
 
-  public getImageUrl() {
-    return this.userDocument.imageUrl;
+  public getLastName() {
+    return this.userDocument.lastName
+  }
+
+  public getAvatarUrl() {
+    return this.userDocument.avatarUrl;
   }
 
   public getCoinsBalance() {
