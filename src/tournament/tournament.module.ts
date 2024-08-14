@@ -1,28 +1,23 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from "@nestjs/config";
-import { CoreModule } from '@app/core';
-import { UserModule } from '@app/user';
-import TournamentModuleTokens from './tournament.module.tokens';
+import { ConfigModule } from '@nestjs/config';
+import { CoreModule } from '@core';
+import { UserModule } from '@user';
 import { TournamentParticipationServiceImpl, TournamentServiceImpl } from '@tournament/services';
-import {
-  MongodbTournamentParticipationRepository,
-  MongoTournamentRepository,
-} from '@tournament/repositories';
+import { MongodbTournamentParticipationRepository, MongoTournamentRepository } from '@tournament/repositories';
 import {
   Tournament,
   TournamentParticipation,
   TournamentParticipationSchema,
   TournamentSchema,
 } from '@tournament/schemas';
-import { TournamentParticipationController, TournamentController } from "@tournament/controllers";
+import { TournamentParticipationController, TournamentController } from '@tournament/controllers';
+import TournamentModuleTokens from './tournament.module.tokens';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tournament.name, schema: TournamentSchema }]),
-    MongooseModule.forFeature([
-      { name: TournamentParticipation.name, schema: TournamentParticipationSchema },
-    ]),
+    MongooseModule.forFeature([{ name: TournamentParticipation.name, schema: TournamentParticipationSchema }]),
     ConfigModule,
     UserModule,
     CoreModule,

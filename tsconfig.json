@@ -18,13 +18,23 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/*": ["./src/*"],
       "@common/*": ["./src/common/*"],
       "@user/*": ["./src/user/*"],
+      "@user": ["./src/user"],
       "@portfolio/*": ["./src/portfolio/*"],
+      "@portfolio": ["./src/portfolio"],
       "@auth/*": ["./src/auth/*"],
+      "@auth": ["./src/auth"],
       "@core/*": ["./src/core/*"],
+      "@core": ["./src/core"],
       "@tournament/*": ["./src/tournament/*"],
+      "@tournament": ["./src/tournament"],
+      "@inventory/*": ["./src/inventory/*"],
+      "@inventory": ["./src/inventory"],
+      "@card/*": ["./src/card/*"],
+      "@card": ["./src/card"],
+      "@marketplace/*": ["./src/marketplace/*"],
+      "@marketplace": ["./src/marketplace"],
     }
   }
 }

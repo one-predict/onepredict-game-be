@@ -1,15 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
-import { Tournament } from './tournament.schema';
-import { User } from '@user/schemas';
 
 @Schema({ collection: 'tournament_participations' })
 export class TournamentParticipation {
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: Tournament.name })
+  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   tournament: ObjectId;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: User.name })
+  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   user: ObjectId;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })

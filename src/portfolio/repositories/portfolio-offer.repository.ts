@@ -48,11 +48,7 @@ export class MongoPortfolioOfferRepository implements PortfolioOfferRepository {
       query.day = MatchRange(params.fromDay, params.toDay);
     }
 
-    const portfolioOfferDocuments = await this.portfolioOfferModel
-      .find(query)
-      .sort({ day: -1 })
-      .lean()
-      .exec();
+    const portfolioOfferDocuments = await this.portfolioOfferModel.find(query).sort({ day: -1 }).lean().exec();
 
     return portfolioOfferDocuments.map((portfolioOfferDocument) => {
       return new MongoPortfolioOfferEntity(portfolioOfferDocument);

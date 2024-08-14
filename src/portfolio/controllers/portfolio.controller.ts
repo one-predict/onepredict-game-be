@@ -1,11 +1,11 @@
 import { Controller, Session, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
 import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
+import { ParseIdentifiersArrayPipe } from '@common/pipes';
 import { PortfolioService } from '@portfolio/services';
 import { InjectPortfolioService } from '@portfolio/decorators';
 import { CreatePortfolioDto, ListPortfoliosDto, CreatePortfolioForCurrentUserDto } from '@portfolio/dto';
-import { ParseIdentifiersArrayPipe } from '@common/pipes';
-import { PortfolioEntity } from '@app/portfolio';
+import { PortfolioEntity } from '@portfolio/entities';
 
 @Controller()
 export default class PortfolioController {

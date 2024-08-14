@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString, IsArray, ArrayMaxSize } from 'class-validator';
+import { IsNotEmpty, IsArray, ArrayMaxSize } from 'class-validator';
 import { IsIdentifier } from '@common/class-validators';
-import { IsPortfolioSelectedToken } from "@portfolio/class-validators";
-import { SelectedPortfolioToken } from "@portfolio/schemas";
+import { IsPortfolioSelectedToken } from '@portfolio/class-validators';
+import { SelectedPortfolioToken } from '@portfolio/schemas';
 
 export class ListPortfoliosDto {
   @IsIdentifier()

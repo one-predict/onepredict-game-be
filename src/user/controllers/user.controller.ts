@@ -1,10 +1,10 @@
 import { Controller, Session, Get, Post, Body, UseGuards } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
+import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
 import { UserService } from '@user/services';
 import { InjectUserService } from '@user/decorators';
 import { CreateUserDto, GetUserByExternalIdDto } from '@user/dto';
-import { PrivateApiAuthorizationTokenGuard } from '@common/guards';
-import { UserEntity } from '@app/user';
+import { UserEntity } from '@user/entities';
 
 @Controller()
 export default class UserController {
@@ -23,6 +23,16 @@ export default class UserController {
     return {
       user: user && this.mapUserEntityToViewModel(user),
     };
+  }
+
+  @Post('/users/current-user/onboard')
+  @UseGuards(AuthGuard)
+  public async finishUserOnboarding(@Session() session: secureSession.Session) {
+    await this.userService.update(session.get('userId'), {
+      onboarded: true,
+    });
+
+    return { success: true };
   }
 
   // GRPC Style
@@ -64,6 +74,7 @@ export default class UserController {
       lastName: user.getLastName(),
       avatarUrl: user.getAvatarUrl(),
       coinsBalance: user.getCoinsBalance(),
+      onboarded: user.getIsOnboarded(),
     };
   }
 }

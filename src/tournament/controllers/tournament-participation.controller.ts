@@ -59,17 +59,12 @@ export default class TournamentParticipationController {
   @Post('/tournament-participations/getUserRankForTournament')
   @UseGuards(PrivateApiAuthorizationTokenGuard)
   public async getUserRankForTournament(@Body() body: GetUserRankForTournamentDto) {
-    const rank = await this.tournamentParticipationService.getUserRankForTournament(
-      body.userId,
-      body.tournamentId,
-    );
+    const rank = await this.tournamentParticipationService.getUserRankForTournament(body.userId, body.tournamentId);
 
     return { rank };
   }
 
-  private mapTournamentParticipationEntityToViewModel(
-    tournamentParticipation: TournamentParticipationEntity,
-  ) {
+  private mapTournamentParticipationEntityToViewModel(tournamentParticipation: TournamentParticipationEntity) {
     return {
       id: tournamentParticipation.getId(),
       userId: tournamentParticipation.getUserId(),

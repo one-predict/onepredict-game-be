@@ -1,11 +1,11 @@
 import { round } from 'lodash';
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { TransactionsManager, InjectTransactionsManager } from '@core';
+import { InjectUserInventoryService, UserInventoryService } from '@inventory';
 import { UserRepository } from '@user/repositories';
 import { InjectUserRepository } from '@user/decorators';
 import { UserEntity } from '@user/entities';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
-import {ExternalUserType} from "@auth/enums";
+import { ExternalUserType } from '@user/enums';
 
 export interface CreateUserParams {
   externalId: string | number;
@@ -22,6 +22,7 @@ export interface UpdateUserParams {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string;
+  onboarded?: boolean;
 }
 
 export interface UserService {
@@ -37,8 +38,9 @@ export interface UserService {
 @Injectable()
 export class UserServiceImpl implements UserService {
   constructor(
+    @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectUserRepository() private readonly userRepository: UserRepository,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public getById(id: string) {
@@ -60,7 +62,13 @@ export class UserServiceImpl implements UserService {
   }
 
   public async create(params: CreateUserParams) {
-    return this.userRepository.create(params);
+    return this.transactionsManager.useTransaction(async () => {
+      const user = await this.userRepository.create(params);
+
+      await this.userInventoryService.create({ userId: user.getId() });
+
+      return user;
+    });
   }
 
   public async update(id: string, params: UpdateUserParams) {
@@ -69,6 +77,7 @@ export class UserServiceImpl implements UserService {
       ...(params.firstName ? { firstName: params.firstName } : {}),
       ...(params.lastName ? { lastName: params.lastName } : {}),
       ...(params.avatarUrl ? { avatarUrl: params.avatarUrl } : {}),
+      ...(params.onboarded !== undefined ? { onboarded: params.onboarded } : {}),
     });
 
     if (!user) {

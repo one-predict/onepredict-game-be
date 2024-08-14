@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
+import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
-import { ExternalUserType } from "@auth/enums";
+import { ExternalUserType } from '@user/enums';
 
 interface CreateUserEntityParams {
   externalId: string | number;
@@ -38,7 +37,7 @@ export interface UserRepository {
 export class MongoUserRepository implements UserRepository {
   public constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public async findByExternalId(externalId: string | number) {

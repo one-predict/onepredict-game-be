@@ -3,8 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosHeaders } from 'axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { Coin } from '@portfolio/enums';
 import { convertMsToDay } from '@common/utils';
+import { Coin } from '@portfolio/enums';
 
 interface CoinGeckoMarketChartResponse {
   prices: [number, number][];

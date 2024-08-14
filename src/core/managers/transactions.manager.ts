@@ -10,10 +10,7 @@ interface ITransactionOptions {
 }
 
 export interface TransactionsManager {
-  useTransaction<Response>(
-    callback: () => Promise<Response>,
-    options?: ITransactionOptions,
-  ): Promise<Response>;
+  useTransaction<Response>(callback: () => Promise<Response>, options?: ITransactionOptions): Promise<Response>;
   getSession(sessionId?: string | undefined): ClientSession | undefined;
 }
 

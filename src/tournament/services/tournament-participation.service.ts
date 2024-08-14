@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { InjectUserService, UserService } from '@app/user';
+import { InjectUserService, UserService } from '@user';
 import { getCurrentDayInUtc } from '@common/utils';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
+import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { InjectTournamentParticipationRepository, InjectTournamentService } from '@tournament/decorators';
-import {TournamentLeaderboard, TournamentParticipationRepository} from '@tournament/repositories';
+import { TournamentLeaderboard, TournamentParticipationRepository } from '@tournament/repositories';
 import { TournamentService } from '@tournament/services';
 import { TournamentParticipationEntity } from '@tournament/entities';
 
@@ -33,7 +32,7 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     private readonly tournamentParticipationRepository: TournamentParticipationRepository,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectUserService() private readonly userService: UserService,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public getUserParticipationForTournament(userId: string, tournamentId: string) {

@@ -36,6 +36,7 @@
     "dayjs": "^1.11.11",
     "ethers": "^6.12.1",
     "joi": "^17.13.1",
+    "lodash.countby": "^4.6.0",
     "lodash.groupby": "^4.6.0",
     "lodash.round": "^4.0.4",
     "lodash.samplesize": "^4.2.0",

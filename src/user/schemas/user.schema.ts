@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { ExternalUserType } from "@auth/enums";
+import { ExternalUserType } from '@user/enums';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -15,17 +15,20 @@ export class User {
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
   coinsBalance: number;
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.String })
   username?: string;
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.String })
   firstName?: string;
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.String })
   lastName?: string;
 
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.String })
   avatarUrl?: string;
+
+  @Prop({ type: mongoose.Schema.Types.Boolean, default: false })
+  onboarded: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

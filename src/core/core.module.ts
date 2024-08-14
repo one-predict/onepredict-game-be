@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { HealthController } from '@core/controllers';
-import CoreModuleTokens from '@core/core.module.tokens';
-import { MongodbTransactionsManager } from '@core/managers';
 import { AsyncLocalStorage } from 'async_hooks';
+import { MongodbTransactionsManager } from '@core/managers';
+import { HealthController } from '@core/controllers';
+import CoreModuleTokens from './core.module.tokens';
 
 @Module({
   controllers: [HealthController],

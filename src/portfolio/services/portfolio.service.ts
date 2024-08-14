@@ -1,17 +1,20 @@
 import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { InjectUserService, UserService } from '@user';
+import {
+  InjectTournamentParticipationService,
+  InjectTournamentService,
+  TournamentParticipationService,
+  TournamentService,
+} from '@tournament';
+import { InjectTransactionsManager, TransactionsManager } from '@core';
+import { getCurrentDayInUtc } from '@common/utils';
 import { InjectPortfolioOfferService, InjectPortfolioRepository } from '@portfolio/decorators';
 import { PortfolioRepository } from '@portfolio/repositories';
 import { PortfolioEntity, PortfolioOfferEntity } from '@portfolio/entities';
 import { PortfolioOfferService } from '@portfolio/services';
-import { InjectUserService, UserService } from '@app/user';
-import { getCurrentDayInUtc } from '@common/utils';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
-import { InjectTournamentParticipationService, InjectTournamentService } from '@tournament/decorators';
-import { TournamentParticipationService, TournamentService } from '@tournament/services';
-import {SelectedPortfolioToken} from "@portfolio/schemas";
+import { SelectedPortfolioToken } from '@portfolio/schemas';
 
 export interface ListPortfoliosParams {
   userId?: string;
@@ -39,7 +42,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     @InjectTournamentParticipationService()
     private readonly tournamentParticipationService: TournamentParticipationService,
     @InjectUserService() private readonly userService: UserService,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public list(params: ListPortfoliosParams) {
@@ -88,7 +91,7 @@ export class PortfolioServiceImpl implements PortfolioService {
       throw new BadRequestException('Portfolio for this day already submitted.');
     }
 
-    return this.portfolioRepository.create({
+    return this.portfolioRepository.createOne({
       user: params.userId,
       selectedTokens: params.selectedTokens,
       offer: params.offerId,

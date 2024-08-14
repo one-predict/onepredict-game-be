@@ -14,7 +14,7 @@ export const getTelegramInitDataFromSignInMessage = (signInMessage: string) => {
   }
 
   return initData as TelegramAppInitData;
-}
+};
 
 export const verifyTelegramSignInMessage = (telegramSignInMessage: string, telegramBotToken: string) => {
   const searchParams = new URLSearchParams(telegramSignInMessage);
@@ -27,15 +27,9 @@ export const verifyTelegramSignInMessage = (telegramSignInMessage: string, teleg
 
   searchParams.forEach((value, key) => dataToCheck.push(`${key}=${value}`));
 
-  const secret = crypto
-    .createHmac('sha256', 'WebAppData')
-    .update(telegramBotToken)
-    .digest();
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(telegramBotToken).digest();
 
-  const messageHash = crypto
-    .createHmac('sha256', secret)
-    .update(dataToCheck.join('\n'))
-    .digest('hex');
+  const messageHash = crypto.createHmac('sha256', secret).update(dataToCheck.join('\n')).digest('hex');
 
   return signature === messageHash;
-}
+};

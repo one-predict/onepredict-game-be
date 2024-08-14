@@ -1,13 +1,6 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  ParseIntPipe,
-  Body,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, ParseIntPipe, Body, Post } from '@nestjs/common';
 import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
-import { PortfolioOfferEntity } from "@portfolio/entities";
+import { PortfolioOfferEntity } from '@portfolio/entities';
 import { PortfolioOfferService } from '@portfolio/services';
 import { InjectPortfolioOfferService } from '@portfolio/decorators';
 

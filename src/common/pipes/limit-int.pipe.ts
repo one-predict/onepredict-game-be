@@ -10,9 +10,7 @@ export default class LimitIntPipe implements PipeTransform {
     }
 
     if (typeof value !== 'number') {
-      throw new BadRequestException(
-        `Invalid integer value for parameter '${metadata.data}' of ${metadata.type}`,
-      );
+      throw new BadRequestException(`Invalid integer value for parameter '${metadata.data}' of ${metadata.type}`);
     }
 
     if (value > this.maxValue) {

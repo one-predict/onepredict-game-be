@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
+import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { InjectTournamentRepository } from '@tournament/decorators';
 import { TournamentEntity } from '@tournament/entities';
 import { TournamentRepository } from '@tournament/repositories';
@@ -19,7 +18,7 @@ export class TournamentServiceImpl implements TournamentService {
 
   constructor(
     @InjectTournamentRepository() private readonly tournamentRepository: TournamentRepository,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public async addParticipant(tournamentId: string) {

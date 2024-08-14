@@ -2,10 +2,9 @@ import { ObjectId } from 'mongodb';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { Portfolio, SelectedPortfolioToken } from '@portfolio/schemas';
 import { PortfolioEntity, MongoPortfolioEntity } from '@portfolio/entities';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
 
 interface FindPortfolioEntitiesParams {
   userId?: string;
@@ -29,7 +28,7 @@ export interface UpdatePortfolioEntityParams {
 export interface PortfolioRepository {
   find(params: FindPortfolioEntitiesParams): Promise<PortfolioEntity[]>;
   existsByUserIdAndOfferId(userId: string, offerId: string): Promise<boolean>;
-  create(params: CreatePortfolioEntityParams): Promise<PortfolioEntity>;
+  createOne(params: CreatePortfolioEntityParams): Promise<PortfolioEntity>;
   updateOneById(id: string, params: UpdatePortfolioEntityParams): Promise<PortfolioEntity | null>;
 }
 
@@ -37,7 +36,7 @@ export interface PortfolioRepository {
 export class MongoPortfolioRepository implements PortfolioRepository {
   public constructor(
     @InjectModel(Portfolio.name) private portfolioModel: Model<Portfolio>,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public async find(params: FindPortfolioEntitiesParams): Promise<PortfolioEntity[]> {
@@ -71,8 +70,10 @@ export class MongoPortfolioRepository implements PortfolioRepository {
       .exec() as unknown as Promise<boolean>;
   }
 
-  public async create(params: CreatePortfolioEntityParams) {
-    const portfolioDocument = await this.portfolioModel.create(params);
+  public async createOne(params: CreatePortfolioEntityParams) {
+    const [portfolioDocument] = await this.portfolioModel.create([params], {
+      session: this.transactionsManager.getSession(),
+    });
 
     return new MongoPortfolioEntity(portfolioDocument);
   }

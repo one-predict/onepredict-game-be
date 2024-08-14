@@ -1,6 +1,6 @@
-import {IsNotEmpty, IsOptional, IsString, IsEnum} from 'class-validator';
-import { ExternalUserType } from "@auth/enums";
-import { IsNumberOrString } from "@common/class-validators";
+import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsNumberOrString } from '@common/class-validators';
+import { ExternalUserType } from '@user/enums';
 
 export class GetUserByExternalIdDto {
   @IsNotEmpty()

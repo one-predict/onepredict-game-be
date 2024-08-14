@@ -1,7 +1,7 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { User } from '@user/schemas';
-import { ExternalUserType } from "@auth/enums";
+import { ExternalUserType } from '@user/enums';
 
 export interface UserEntity {
   getId(): string;
@@ -12,6 +12,7 @@ export interface UserEntity {
   getUsername(): string | undefined;
   getAvatarUrl(): string | undefined;
   getCoinsBalance(): number;
+  getIsOnboarded(): boolean;
 }
 
 export class MongoUserEntity implements UserEntity {
@@ -30,7 +31,7 @@ export class MongoUserEntity implements UserEntity {
   }
 
   public getUsername() {
-    return this.userDocument.lastName
+    return this.userDocument.lastName;
   }
 
   public getFirstName() {
@@ -38,7 +39,7 @@ export class MongoUserEntity implements UserEntity {
   }
 
   public getLastName() {
-    return this.userDocument.lastName
+    return this.userDocument.lastName;
   }
 
   public getAvatarUrl() {
@@ -47,5 +48,9 @@ export class MongoUserEntity implements UserEntity {
 
   public getCoinsBalance() {
     return this.userDocument.coinsBalance;
+  }
+
+  public getIsOnboarded() {
+    return this.userDocument.onboarded;
   }
 }

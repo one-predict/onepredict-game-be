@@ -2,8 +2,7 @@ import { ObjectId } from 'mongodb';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { InjectTransactionsManagerDecorator } from '@core/decorators';
-import { TransactionsManager } from '@core/managers';
+import { TransactionsManager, InjectTransactionsManager } from '@core';
 import { Tournament } from '@tournament/schemas';
 import { MongoTournamentEntity, TournamentEntity } from '@tournament/entities';
 
@@ -19,7 +18,7 @@ export interface TournamentRepository {
 export class MongoTournamentRepository implements TournamentRepository {
   public constructor(
     @InjectModel(Tournament.name) private tournamentModel: Model<Tournament>,
-    @InjectTransactionsManagerDecorator() private readonly transactionsManager: TransactionsManager,
+    @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
   public async findLatest(limit: number): Promise<TournamentEntity[]> {
@@ -39,10 +38,7 @@ export class MongoTournamentRepository implements TournamentRepository {
   public async findBetweenDays(startDay: number, endDay: number): Promise<TournamentEntity[]> {
     const tournamentDocuments = await this.tournamentModel
       .find({
-        $and: [
-          { startDay: { $lte: new Date(endDay) } },
-          { endDay: { $gte: new Date(startDay) } },
-        ],
+        $and: [{ startDay: { $lte: new Date(endDay) } }, { endDay: { $gte: new Date(startDay) } }],
       })
       .lean()
       .session(this.transactionsManager.getSession())

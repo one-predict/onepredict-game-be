@@ -3,11 +3,14 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuthModule } from '@app/auth';
-import { UserModule } from '@app/user';
-import { CoreModule } from '@app/core';
-import { PortfolioModule } from '@app/portfolio';
 import { LoggerMiddleware } from '@common/middlewares';
+import { AuthModule } from '@auth';
+import { UserModule } from '@user';
+import { CoreModule } from '@core';
+import { CardModule } from '@card';
+import { InventoryModule } from '@inventory';
+import { PortfolioModule } from '@portfolio';
+import { MarketplaceModule } from '@marketplace';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { LoggerMiddleware } from '@common/middlewares';
     AuthModule,
     UserModule,
     PortfolioModule,
+    CardModule,
+    InventoryModule,
+    MarketplaceModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),

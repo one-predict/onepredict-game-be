@@ -1,8 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from '@user/schemas';
-import { PortfolioOffer } from './portfolio-offer.schema';
 
 export type PortfolioDocument = HydratedDocument<Portfolio>;
 
@@ -26,7 +24,6 @@ export class Portfolio {
   @Prop({
     required: true,
     type: mongoose.Schema.Types.ObjectId,
-    ref: User.name,
   })
   user: ObjectId;
 
@@ -36,7 +33,6 @@ export class Portfolio {
   @Prop({
     required: true,
     type: mongoose.Schema.Types.ObjectId,
-    ref: PortfolioOffer.name,
   })
   offer: ObjectId;
 
