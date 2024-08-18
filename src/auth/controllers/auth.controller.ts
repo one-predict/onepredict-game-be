@@ -21,7 +21,10 @@ export default class AuthController {
 
   @Post('/auth/sign-in')
   public async signIn(@Session() session: secureSession.Session, @Body() body: SignInDto) {
-    const user = await this.authService.signTelegramUser(body.signInMessage);
+    const user = await this.authService.signInTelegramUser({
+      signInMessage: body.signInMessage,
+      referralId: body.referralId,
+    });
 
     session.set('userId', user.getId());
     session.set('externalId', user.getExternalId());

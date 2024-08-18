@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { ExternalUserType } from '@user/enums';
+import { ObjectId } from 'mongodb';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -29,6 +30,9 @@ export class User {
 
   @Prop({ type: mongoose.Schema.Types.Boolean, default: false })
   onboarded: boolean;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, default: null })
+  referrer?: ObjectId | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

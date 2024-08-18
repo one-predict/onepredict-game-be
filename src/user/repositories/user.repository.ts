@@ -15,6 +15,7 @@ interface CreateUserEntityParams {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string;
+  referrer?: string | null;
 }
 
 interface UpdateUserEntityParams {

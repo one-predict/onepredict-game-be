@@ -15,6 +15,7 @@ export interface CreateUserParams {
   username?: string;
   avatarUrl?: string;
   coinsBalance?: number;
+  referralId?: string | null;
 }
 
 export interface UpdateUserParams {
@@ -63,7 +64,16 @@ export class UserServiceImpl implements UserService {
 
   public async create(params: CreateUserParams) {
     return this.transactionsManager.useTransaction(async () => {
-      const user = await this.userRepository.create(params);
+      const user = await this.userRepository.create({
+        externalId: params.externalId,
+        externalType: params.externalType,
+        coinsBalance: params.coinsBalance,
+        username: params.username,
+        firstName: params.firstName,
+        lastName: params.lastName,
+        avatarUrl: params.avatarUrl,
+        referrer: params.referralId,
+      });
 
       await this.userInventoryService.create({ userId: user.getId() });
 

@@ -3,8 +3,13 @@ import { InjectUserService, UserEntity, UserService, ExternalUserType } from '@u
 import { ConfigService } from '@nestjs/config';
 import { getTelegramInitDataFromSignInMessage, verifyTelegramSignInMessage } from '@auth/utils';
 
+export interface SignInTemplateUser {
+  signInMessage: string;
+  referralId?: string;
+}
+
 export interface AuthService {
-  signTelegramUser(signInMessage: string): Promise<UserEntity>;
+  signInTelegramUser(params: SignInTemplateUser): Promise<UserEntity>;
 }
 
 @Injectable()
@@ -14,10 +19,13 @@ export class AuthServiceImpl implements AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  public async signTelegramUser(signInMessage: string) {
-    const initData = getTelegramInitDataFromSignInMessage(signInMessage);
+  public async signInTelegramUser(params: SignInTemplateUser) {
+    const initData = getTelegramInitDataFromSignInMessage(params.signInMessage);
 
-    const isMessageValid = verifyTelegramSignInMessage(signInMessage, this.configService.get('TELEGRAM_BOT_TOKEN'));
+    const isMessageValid = verifyTelegramSignInMessage(
+      params.signInMessage,
+      this.configService.get('TELEGRAM_BOT_TOKEN'),
+    );
 
     if (!isMessageValid || !initData.user) {
       throw new ForbiddenException('Authorization failed.');
@@ -33,6 +41,7 @@ export class AuthServiceImpl implements AuthService {
         firstName: initData.user.first_name,
         lastName: initData.user.last_name,
         avatarUrl: initData.user.photo_url,
+        referralId: params.referralId,
       });
     }
 
