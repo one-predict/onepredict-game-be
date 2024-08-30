@@ -1,16 +1,28 @@
 import { ObjectId } from 'mongodb';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { MatchRange } from '@common/data/aggregations';
+import { FindEntitiesQuery } from '@common/types';
+import { transformSortArrayToSortObject } from '@common/utils';
 import { TransactionsManager, InjectTransactionsManager } from '@core';
 import { Tournament } from '@tournament/schemas';
 import { MongoTournamentEntity, TournamentEntity } from '@tournament/entities';
+import { TournamentSortingField } from '@tournament/enums';
+
+export type FindTournamentEntitiesQuery = FindEntitiesQuery<
+  {
+    startsAfter?: number;
+    startsBefore?: number;
+    endsAfter?: number;
+    endsBefore?: number;
+  },
+  TournamentSortingField
+>;
 
 export interface TournamentRepository {
-  findLatest(limit: number): Promise<TournamentEntity[]>;
-  findBetweenDays(startDay: number, endDay): Promise<TournamentEntity[]>;
+  find(query: FindTournamentEntitiesQuery): Promise<TournamentEntity[]>;
   findById(id: string): Promise<TournamentEntity>;
-  findByDisplayId(displayId: number): Promise<TournamentEntity>;
   incrementParticipantsCount(tournamentId: string): Promise<void>;
 }
 
@@ -21,27 +33,25 @@ export class MongoTournamentRepository implements TournamentRepository {
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async findLatest(limit: number): Promise<TournamentEntity[]> {
-    const tournamentDocuments = await this.tournamentModel
-      .find({})
-      .sort({ startDay: -1 })
-      .limit(limit)
-      .lean()
-      .session(this.transactionsManager.getSession())
-      .exec();
+  public async find(query: FindTournamentEntitiesQuery) {
+    const mongodbQueryFilter: FilterQuery<Tournament> = {};
 
-    return tournamentDocuments.map((tournamentDocument) => {
-      return new MongoTournamentEntity(tournamentDocument);
-    });
-  }
+    if (query.filter.startsAfter || query.filter.startsBefore) {
+      mongodbQueryFilter.startTimestamp = MatchRange(query.filter.startsAfter, query.filter.startsBefore);
+    }
 
-  public async findBetweenDays(startDay: number, endDay: number): Promise<TournamentEntity[]> {
+    if (query.filter.endsAfter || query.filter.endsBefore) {
+      mongodbQueryFilter.endTimestamp = MatchRange(query.filter.endsAfter, query.filter.endsBefore);
+    }
+
     const tournamentDocuments = await this.tournamentModel
-      .find({
-        $and: [{ startDay: { $lte: new Date(endDay) } }, { endDay: { $gte: new Date(startDay) } }],
+      .find(mongodbQueryFilter, undefined, {
+        lean: true,
+        limit: query.limit,
+        skip: query.skip,
+        sort: query.sort && transformSortArrayToSortObject(query.sort),
+        session: this.transactionsManager.getSession(),
       })
-      .lean()
-      .session(this.transactionsManager.getSession())
       .exec();
 
     return tournamentDocuments.map((tournamentDocument) => {
@@ -53,18 +63,6 @@ export class MongoTournamentRepository implements TournamentRepository {
     const tournament = await this.tournamentModel
       .findOne({
         _id: new ObjectId(id),
-      })
-      .lean()
-      .session(this.transactionsManager.getSession())
-      .exec();
-
-    return tournament && new MongoTournamentEntity(tournament);
-  }
-
-  public async findByDisplayId(displayId: number) {
-    const tournament = await this.tournamentModel
-      .findOne({
-        displayId,
       })
       .lean()
       .session(this.transactionsManager.getSession())

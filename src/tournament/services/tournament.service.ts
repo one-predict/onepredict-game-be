@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { SortDirection } from '@common/enums';
+import { getCurrentUnixTimestamp } from '@common/utils';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { InjectTournamentRepository } from '@tournament/decorators';
 import { TournamentEntity } from '@tournament/entities';
 import { TournamentRepository } from '@tournament/repositories';
+import { TournamentSortingField, TournamentStatus } from '@tournament/enums';
 
 export interface TournamentService {
   addParticipant(tournamentId: string): Promise<void>;
-  listLatest(): Promise<TournamentEntity[]>;
-  listBetweenDays(startDay: number, endDay): Promise<TournamentEntity[]>;
+  listLatest(status?: TournamentStatus): Promise<TournamentEntity[]>;
   getById(id: string): Promise<TournamentEntity | null>;
-  getByDisplayId(displayId: number): Promise<TournamentEntity | null>;
 }
 
 @Injectable()
@@ -25,19 +26,39 @@ export class TournamentServiceImpl implements TournamentService {
     await this.tournamentRepository.incrementParticipantsCount(tournamentId);
   }
 
-  public async listLatest() {
-    return this.tournamentRepository.findLatest(this.LATEST_TOURNAMENTS_LIMIT);
-  }
+  public async listLatest(status?: TournamentStatus) {
+    const currentTimestamp = getCurrentUnixTimestamp();
 
-  public async listBetweenDays(startDay: number, endDay) {
-    return this.tournamentRepository.findBetweenDays(startDay, endDay);
+    return this.tournamentRepository.find({
+      filter: {
+        ...(status === TournamentStatus.Upcoming
+          ? {
+              startsAfter: currentTimestamp + 1,
+            }
+          : {}),
+        ...(status === TournamentStatus.Live
+          ? {
+              startsBefore: currentTimestamp,
+              endsAfter: currentTimestamp,
+            }
+          : {}),
+        ...(status === TournamentStatus.Finished
+          ? {
+              endsBefore: currentTimestamp,
+            }
+          : {}),
+      },
+      sort: [
+        {
+          field: TournamentSortingField.StartTimestamp,
+          direction: SortDirection.Ascending,
+        },
+      ],
+      limit: this.LATEST_TOURNAMENTS_LIMIT,
+    });
   }
 
   public getById(id: string) {
     return this.tournamentRepository.findById(id);
-  }
-
-  public getByDisplayId(displayId: number) {
-    return this.tournamentRepository.findByDisplayId(displayId);
   }
 }

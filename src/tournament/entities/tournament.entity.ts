@@ -4,14 +4,14 @@ import { Tournament } from '@tournament/schemas';
 
 export interface TournamentEntity {
   getId(): string;
-  getDisplayId(): number;
   getTitle(): string;
   getDescription(): string;
   getEntryPrice(): number;
   getStaticPrizePool(): number;
   getParticipantsCount(): number;
-  getStartDay(): number;
-  getEndDay(): number;
+  getStartTimestamp(): number;
+  getEndTimestamp(): number;
+  getImageUrl(): string | undefined;
 }
 
 export class MongoTournamentEntity implements TournamentEntity {
@@ -25,8 +25,8 @@ export class MongoTournamentEntity implements TournamentEntity {
     return this.tournamentDocument.title;
   }
 
-  public getDisplayId() {
-    return this.tournamentDocument.displayId;
+  public getImageUrl() {
+    return this.tournamentDocument.imageUrl;
   }
 
   public getDescription() {
@@ -45,11 +45,11 @@ export class MongoTournamentEntity implements TournamentEntity {
     return this.tournamentDocument.participantsCount;
   }
 
-  public getStartDay() {
-    return this.tournamentDocument.startDay;
+  public getStartTimestamp() {
+    return this.tournamentDocument.startTimestamp;
   }
 
-  public getEndDay() {
-    return this.tournamentDocument.endDay;
+  public getEndTimestamp() {
+    return this.tournamentDocument.endTimestamp;
   }
 }

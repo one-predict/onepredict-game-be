@@ -1,9 +1,8 @@
-import { Controller, Session, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Session, Get, Post, UseGuards } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
-import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
+import { AuthGuard } from '@common/guards';
 import { UserService } from '@user/services';
 import { InjectUserService } from '@user/decorators';
-import { CreateUserDto, GetUserByExternalIdDto } from '@user/dto';
 import { UserEntity } from '@user/entities';
 
 @Controller()
@@ -33,35 +32,6 @@ export default class UserController {
     });
 
     return { success: true };
-  }
-
-  // GRPC Style
-  @Post('/users/getByExternalId')
-  @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async getByFid(@Body() body: GetUserByExternalIdDto) {
-    const user = await this.userService.getByExternalId(body.externalId);
-
-    return {
-      user: user && this.mapUserEntityToViewModel(user),
-    };
-  }
-
-  // GRPC Style
-  @Post('/users/createUser')
-  @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async createUser(@Body() body: CreateUserDto) {
-    const user = await this.userService.create({
-      externalId: body.externalId,
-      externalType: body.externalType,
-      username: body.username,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      avatarUrl: body.avatarUrl,
-    });
-
-    return {
-      user: user && this.mapUserEntityToViewModel(user),
-    };
   }
 
   private mapUserEntityToViewModel(user: UserEntity) {

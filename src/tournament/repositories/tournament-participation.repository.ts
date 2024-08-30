@@ -1,11 +1,18 @@
 import { ObjectId } from 'mongodb';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Gt, Match, Or } from '@common/data/aggregations';
+import { FindEntitiesQuery } from '@common/types';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { TournamentParticipation } from '@tournament/schemas';
 import { MongoTournamentParticipationEntity } from '@tournament/entities';
+import { transformSortArrayToSortObject } from '@common/utils';
+
+export type FindTournamentParticipationEntitiesQuery = FindEntitiesQuery<{
+  userId?: string;
+  tournamentId?: string;
+}>;
 
 export interface CreateTournamentParticipationEntityParams {
   user: string;
@@ -23,11 +30,10 @@ export interface TournamentLeaderboard {
 }
 
 export interface TournamentParticipationRepository {
-  findByUserIdAndTournamentId(userId: string, tournamentId: string): Promise<MongoTournamentParticipationEntity | null>;
-  existsByTournamentIdAndUserId(tournamentId: string, userId: string): Promise<boolean>;
+  find(query: FindTournamentParticipationEntitiesQuery): Promise<MongoTournamentParticipationEntity[]>;
   create(params: CreateTournamentParticipationEntityParams): Promise<MongoTournamentParticipationEntity>;
+  addPoints(userId: string, tournamentId: string, points: number): Promise<void>;
   getLeaderboard(tournamentId: string): Promise<TournamentLeaderboard>;
-  bulkAddPoints(tournamentIds: string[], userId: string, points: number): Promise<void>;
   getRank(tournamentId: string, userId: string): Promise<number>;
 }
 
@@ -39,30 +45,30 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async findByUserIdAndTournamentId(userId: string, tournamentId: string) {
-    const tournamentParticipationDocument = await this.tournamentParticipationModel
-      .findOne(
-        {
-          user: new ObjectId(userId),
-          tournament: new ObjectId(tournamentId),
-        },
-        undefined,
-        { session: this.transactionsManager.getSession() },
-      )
-      .lean()
+  public async find(query: FindTournamentParticipationEntitiesQuery) {
+    const mongodbQueryFilter: FilterQuery<TournamentParticipation> = {};
+
+    if (query.filter.userId) {
+      mongodbQueryFilter.user = new ObjectId(query.filter.userId);
+    }
+
+    if (query.filter.tournamentId) {
+      mongodbQueryFilter.tournament = new ObjectId(query.filter.tournamentId);
+    }
+
+    const tournamentParticipationDocuments = await this.tournamentParticipationModel
+      .find(mongodbQueryFilter, undefined, {
+        lean: true,
+        limit: query.limit,
+        skip: query.skip,
+        sort: query.sort && transformSortArrayToSortObject(query.sort),
+        session: this.transactionsManager.getSession(),
+      })
       .exec();
 
-    return tournamentParticipationDocument && new MongoTournamentParticipationEntity(tournamentParticipationDocument);
-  }
-
-  public async existsByTournamentIdAndUserId(tournamentId: string, userId: string) {
-    return (await this.tournamentParticipationModel
-      .exists({
-        user: new ObjectId(userId),
-        tournament: new ObjectId(tournamentId),
-      })
-      .session(this.transactionsManager.getSession())
-      .exec()) as unknown as Promise<boolean>;
+    return tournamentParticipationDocuments.map((tournamentParticipationDocument) => {
+      return new MongoTournamentParticipationEntity(tournamentParticipationDocument);
+    });
   }
 
   public async getLeaderboard(tournamentId: string) {
@@ -147,11 +153,11 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
     return new MongoTournamentParticipationEntity(tournamentParticipationDocument);
   }
 
-  public async bulkAddPoints(tournamentIds: string[], userId: string, points: number) {
+  public async addPoints(userId: string, tournamentId: string, points: number) {
     await this.tournamentParticipationModel
       .updateOne(
         {
-          tournament: { $in: tournamentIds.map((id) => new ObjectId(id)) },
+          tournament: new ObjectId(tournamentId),
           user: new ObjectId(userId),
         },
         [

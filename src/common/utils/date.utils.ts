@@ -1,15 +1,21 @@
 import * as dayjs from 'dayjs';
 
-export const convertMsToDay = (ms: number): number => {
-  return Math.floor(ms / 1000 / 60 / 60 / 24);
+export const getCurrentUtcDate = () => {
+  return dayjs().utc().toDate();
 };
 
-export const getCurrentDayInUtc = (): number => {
-  return convertMsToDay(dayjs().utc().toDate().getTime());
+export const getCurrentUnixTimestamp = () => {
+  return dayjs().utc().unix();
 };
 
-export const getDateFromUtcDay = (utcDay: number) => {
-  const dateInMilliseconds = utcDay * 24 * 60 * 60 * 1000;
+export const getNearestHourInUnixTimestamp = () => {
+  return dayjs().utc().startOf('hour').unix();
+};
 
-  return dayjs.utc(dateInMilliseconds).format('MM/DD/YYYY');
+export const getUnixTimestampFromDate = (date: Date) => {
+  return dayjs(date).utc().unix();
+};
+
+export const getHoursDifference = (from: Date, to: Date) => {
+  return Math.abs(Math.floor(dayjs(to).diff(dayjs(from), 'hours')));
 };

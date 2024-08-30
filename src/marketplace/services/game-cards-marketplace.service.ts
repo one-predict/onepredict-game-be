@@ -26,7 +26,7 @@ export class GameCardsMarketplaceServiceImpl implements GameCardsMarketplaceServ
     const card = await this.gameCardService.getById(params.cardId);
 
     if (!card) {
-      throw new UnprocessableEntityException("Provided card doesn't exists.");
+      throw new UnprocessableEntityException(`Provided card doesn't exists.`);
     }
 
     await this.transactionManager.useTransaction(async () => {

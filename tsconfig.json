@@ -35,6 +35,8 @@
       "@card": ["./src/card"],
       "@marketplace/*": ["./src/marketplace/*"],
       "@marketplace": ["./src/marketplace"],
+      "@coin/*": ["./src/coin/*"],
+      "@coin": ["./src/coin"],
     }
   }
 }

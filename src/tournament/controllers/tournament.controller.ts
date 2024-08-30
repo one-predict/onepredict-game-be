@@ -1,10 +1,10 @@
-import { Controller, UseGuards, Body, Post, Get, Param, Query, NotFoundException, Session } from '@nestjs/common';
+import { Controller, UseGuards, Post, Get, Param, NotFoundException, Session, Query } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
-import { AuthGuard, PrivateApiAuthorizationTokenGuard } from '@common/guards';
+import { AuthGuard } from '@common/guards';
 import { InjectTournamentService, InjectTournamentParticipationService } from '@tournament/decorators';
 import { TournamentParticipationService, TournamentService } from '@tournament/services';
-import { GetTournamentByDisplayIdDto } from '@tournament/dto';
 import { TournamentEntity, TournamentParticipationEntity } from '@tournament/entities';
+import { ListLatestTournamentsDto } from '@tournament/dto';
 
 @Controller()
 export default class TournamentController {
@@ -16,19 +16,16 @@ export default class TournamentController {
 
   @Get('/tournaments/latest')
   @UseGuards(AuthGuard)
-  public async getLatestTournaments() {
-    const latestTournaments = await this.tournamentService.listLatest();
+  public async getLatestTournaments(@Query() query: ListLatestTournamentsDto) {
+    const latestTournaments = await this.tournamentService.listLatest(query.status);
 
     return latestTournaments.map((tournament) => this.mapTournamentEntityToViewModel(tournament));
   }
 
-  @Get('/tournaments/:identifier')
+  @Get('/tournaments/:id')
   @UseGuards(AuthGuard)
-  public async getTournament(@Param('identifier') identifier: string, @Query('identifierType') identifierType: string) {
-    const tournament =
-      identifierType === 'displayId'
-        ? await this.tournamentService.getByDisplayId(Number(identifier))
-        : await this.tournamentService.getById(identifier);
+  public async getTournament(@Param('id') id: string) {
+    const tournament = await this.tournamentService.getById(id);
 
     if (!tournament) {
       throw new NotFoundException('Tournament not found');
@@ -54,7 +51,7 @@ export default class TournamentController {
     @Session() session: secureSession.Session,
     @Param('id') tournamentId: string,
   ) {
-    const participation = await this.tournamentParticipationService.getUserParticipationForTournament(
+    const participation = await this.tournamentParticipationService.getUserParticipationInTournament(
       session.get('userId'),
       tournamentId,
     );
@@ -79,28 +76,17 @@ export default class TournamentController {
     return { success: true };
   }
 
-  // GRPC Style
-  @Post('/tournaments/getTournamentByDisplayId')
-  @UseGuards(PrivateApiAuthorizationTokenGuard)
-  public async getTournamentByDisplayId(@Body() body: GetTournamentByDisplayIdDto) {
-    const tournament = await this.tournamentService.getByDisplayId(body.tournamentDisplayId);
-
-    return {
-      tournament: tournament && this.mapTournamentEntityToViewModel(tournament),
-    };
-  }
-
   private mapTournamentEntityToViewModel(tournament: TournamentEntity) {
     return {
       id: tournament.getId(),
       title: tournament.getTitle(),
       description: tournament.getDescription(),
-      displayId: tournament.getDisplayId(),
+      imageUrl: tournament.getImageUrl(),
       entryPrice: tournament.getEntryPrice(),
       staticPrizePool: tournament.getStaticPrizePool(),
       participantsCount: tournament.getParticipantsCount(),
-      startDay: tournament.getStartDay(),
-      endDay: tournament.getEndDay(),
+      startTimestamp: tournament.getStartTimestamp(),
+      endTimestamp: tournament.getEndTimestamp(),
     };
   }
 

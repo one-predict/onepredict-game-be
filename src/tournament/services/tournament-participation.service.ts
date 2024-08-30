@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { getCurrentUnixTimestamp } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
-import { getCurrentDayInUtc } from '@common/utils';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
-import { InjectTournamentParticipationRepository, InjectTournamentService } from '@tournament/decorators';
+import {
+  InjectTournamentDeckService,
+  InjectTournamentParticipationRepository,
+  InjectTournamentService,
+} from '@tournament/decorators';
 import { TournamentLeaderboard, TournamentParticipationRepository } from '@tournament/repositories';
-import { TournamentService } from '@tournament/services';
+import { TournamentDeckService, TournamentService } from '@tournament/services';
 import { TournamentParticipationEntity } from '@tournament/entities';
 
 export interface CreateTournamentParticipationParams {
@@ -20,9 +24,9 @@ export interface CreateTournamentParticipationParams {
 export interface TournamentParticipationService {
   create(params: CreateTournamentParticipationParams): Promise<void>;
   getUserRankForTournament(userId: string, tournamentId: string): Promise<number>;
-  getUserParticipationForTournament(userId: string, tournamentId: string): Promise<TournamentParticipationEntity>;
+  getUserParticipationInTournament(userId: string, tournamentId: string): Promise<TournamentParticipationEntity | null>;
   getLeaderboard(tournamentId: string): Promise<TournamentLeaderboard>;
-  bulkAddPoints(tournamentIds: string[], userId: string, points: number): Promise<void>;
+  addPoints(userId: string, tournamentId: string, points: number): Promise<void>;
 }
 
 @Injectable()
@@ -31,12 +35,21 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     @InjectTournamentParticipationRepository()
     private readonly tournamentParticipationRepository: TournamentParticipationRepository,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
+    @InjectTournamentDeckService() private readonly tournamentDeckService: TournamentDeckService,
     @InjectUserService() private readonly userService: UserService,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public getUserParticipationForTournament(userId: string, tournamentId: string) {
-    return this.tournamentParticipationRepository.findByUserIdAndTournamentId(userId, tournamentId);
+  public async getUserParticipationInTournament(userId: string, tournamentId: string) {
+    const [tournamentParticipation] = await this.tournamentParticipationRepository.find({
+      filter: {
+        userId,
+        tournamentId,
+      },
+      limit: 1,
+    });
+
+    return tournamentParticipation ?? null;
   }
 
   public async create(params: CreateTournamentParticipationParams) {
@@ -44,26 +57,28 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
       const tournament = await this.tournamentService.getById(params.tournamentId);
 
       if (!tournament) {
-        throw new BadRequestException('Provided tournament is not found.');
+        throw new UnprocessableEntityException(`Provided tournament doesn't exist.`);
       }
 
-      const currentDay = getCurrentDayInUtc();
+      const currentTimestamp = getCurrentUnixTimestamp();
 
-      if (currentDay >= tournament.getEndDay()) {
+      if (currentTimestamp >= tournament.getStartTimestamp()) {
         throw new UnprocessableEntityException('Tournament is not available for participation.');
       }
 
-      const participationExists = await this.tournamentParticipationRepository.existsByTournamentIdAndUserId(
-        params.tournamentId,
-        params.userId,
-      );
+      const existingParticipation = await this.getUserParticipationInTournament(params.userId, params.tournamentId);
 
-      if (participationExists) {
-        throw new BadRequestException('User already participated in the tournament.');
+      if (existingParticipation) {
+        throw new UnprocessableEntityException('User already participated in the tournament.');
       }
 
       await this.userService.withdrawCoins(params.userId, tournament.getEntryPrice());
       await this.tournamentService.addParticipant(params.tournamentId);
+
+      await this.tournamentDeckService.create({
+        userId: params.userId,
+        tournamentId: params.tournamentId,
+      });
 
       await this.tournamentParticipationRepository.create({
         tournament: params.tournamentId,
@@ -81,7 +96,7 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     return this.tournamentParticipationRepository.getRank(tournamentId, userId);
   }
 
-  public async bulkAddPoints(tournamentIds: string[], userId: string, points: number) {
-    await this.tournamentParticipationRepository.bulkAddPoints(tournamentIds, userId, points);
+  public async addPoints(userId: string, tournamentId: string, points: number) {
+    await this.tournamentParticipationRepository.addPoints(userId, tournamentId, points);
   }
 }

@@ -9,8 +9,8 @@ export class Tournament {
   @Prop({ required: true, type: mongoose.Schema.Types.String })
   description: string;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.Number })
-  displayId: number;
+  @Prop({ required: false, type: mongoose.Schema.Types.String })
+  imageUrl?: string;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   entryPrice: number;
@@ -22,13 +22,12 @@ export class Tournament {
   participantsCount: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
-  startDay: number;
+  startTimestamp: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
-  endDay: number;
+  endTimestamp: number;
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);
 
-TournamentSchema.index({ fromDay: 1, tillDay: 1 });
-TournamentSchema.index({ displayId: 1 }, { unique: true });
+TournamentSchema.index({ startTimestamp: 1, endTimestamp: 1 });

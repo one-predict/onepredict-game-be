@@ -6,7 +6,9 @@ export interface PortfolioEntity {
   getId(): string;
   getUserId(): string;
   getOfferId(): string;
+  getTournamentId(): string | null;
   getCreatedAt(): Date;
+  getInterval(): [number, number];
   getSelectedTokens(): SelectedPortfolioToken[];
   getEarnedCoins(): number;
   isAwarded(): boolean;
@@ -41,5 +43,16 @@ export class MongoPortfolioEntity implements PortfolioEntity {
 
   public isAwarded() {
     return this.portfolioDocument.isAwarded;
+  }
+
+  public getInterval() {
+    return [this.portfolioDocument.intervalStartTimestamp, this.portfolioDocument.intervalEndTimestamp] as [
+      number,
+      number,
+    ];
+  }
+
+  public getTournamentId(): string | null {
+    return this.portfolioDocument.tournament?.toString() ?? null;
   }
 }

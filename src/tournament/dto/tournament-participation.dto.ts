@@ -6,33 +6,3 @@ export class CreateTournamentParticipationDto {
   @IsIdentifier()
   tournamentId: string;
 }
-
-export class GetUserParticipationForTournamentDto {
-  @IsNotEmpty()
-  @IsIdentifier()
-  tournamentId: string;
-
-  @IsNotEmpty()
-  @IsIdentifier()
-  userId: string;
-}
-
-export class GetUserRankForTournamentDto {
-  @IsNotEmpty()
-  @IsIdentifier()
-  tournamentId: string;
-
-  @IsNotEmpty()
-  @IsIdentifier()
-  userId: string;
-}
-
-export class CreateTournamentParticipationForUserDto {
-  @IsNotEmpty()
-  @IsIdentifier()
-  tournamentId: string;
-
-  @IsNotEmpty()
-  @IsIdentifier()
-  userId: string;
-}

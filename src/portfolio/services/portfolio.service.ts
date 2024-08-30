@@ -1,25 +1,35 @@
 import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { SortDirection } from '@common/enums';
+import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
 import {
+  InjectTournamentDeckService,
   InjectTournamentParticipationService,
   InjectTournamentService,
+  TournamentDeckService,
   TournamentParticipationService,
   TournamentService,
 } from '@tournament';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
-import { getCurrentDayInUtc } from '@common/utils';
-import { InjectPortfolioOfferService, InjectPortfolioRepository } from '@portfolio/decorators';
-import { PortfolioRepository } from '@portfolio/repositories';
-import { PortfolioEntity, PortfolioOfferEntity } from '@portfolio/entities';
-import { PortfolioOfferService } from '@portfolio/services';
+import {
+  InjectCoinsPricingService,
+  InjectTokensOfferService,
+  CoinsPricingService,
+  TokensOfferService,
+  TokensOfferEntity,
+  CoinsPricingRecordEntity,
+  CoinsPricingRecordSortField,
+} from '@coin';
+import { InjectPortfolioRepository } from '@portfolio/decorators';
+import { FindPortfolioEntitiesQuery, PortfolioRepository } from '@portfolio/repositories';
+import { PortfolioEntity } from '@portfolio/entities';
 import { SelectedPortfolioToken } from '@portfolio/schemas';
+import { PortfolioSortingField } from '@portfolio/enums';
+import { GameCardId } from '@card';
 
-export interface ListPortfoliosParams {
-  userId?: string;
-  offerIds?: string[];
-}
+export type ListPortfoliosParams = FindPortfolioEntitiesQuery;
 
 export interface CreatePortfolioParams {
   userId: string;
@@ -27,107 +37,204 @@ export interface CreatePortfolioParams {
   offerId: string;
 }
 
+export interface UpdatePortfolioCardsParams {
+  cardsToAdd: GameCardId[];
+  cardsToRemove: GameCardId[];
+}
+
 export interface PortfolioService {
   list(params: ListPortfoliosParams): Promise<PortfolioEntity[]>;
-  listForUserAndOffers(userId: string, offerIds: string[]): Promise<PortfolioEntity[]>;
   create(params: CreatePortfolioParams): Promise<PortfolioEntity>;
+  updateCards(portfolioId: string, params: UpdatePortfolioCardsParams): Promise<PortfolioEntity>;
 }
 
 @Injectable()
 export class PortfolioServiceImpl implements PortfolioService {
   constructor(
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
-    @InjectPortfolioOfferService() private readonly portfolioOfferService: PortfolioOfferService,
+    @InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService,
+    @InjectCoinsPricingService() private readonly coinsPricingService: CoinsPricingService,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectTournamentParticipationService()
     private readonly tournamentParticipationService: TournamentParticipationService,
     @InjectUserService() private readonly userService: UserService,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
+    @InjectTournamentDeckService() private readonly tournamentDeckService: TournamentDeckService,
   ) {}
 
   public list(params: ListPortfoliosParams) {
-    return this.portfolioRepository.find({
-      userId: params.userId,
-      offerIds: params.offerIds,
-    });
+    return this.portfolioRepository.find(params);
   }
 
-  public listForUserAndOffers(userId: string, offerIds: string[]) {
-    if (!offerIds.length) {
-      throw new BadRequestException('At least one offer should be provided.');
+  public getById(id: string) {
+    return this.portfolioRepository.findById(id);
+  }
+
+  public async getByIdIfExists(id: string) {
+    const portfolio = await this.getById(id);
+
+    if (!portfolio) {
+      throw new NotFoundException('Portfolio is not found.');
     }
 
-    return this.portfolioRepository.find({
-      userId,
-      offerIds,
-    });
+    return portfolio;
   }
 
   public async create(params: CreatePortfolioParams) {
-    const offer = await this.portfolioOfferService.getById(params.offerId);
+    const offer = await this.tokensOfferService.getById(params.offerId);
 
     if (!offer) {
-      throw new BadRequestException('Provided offer is not found');
+      throw new UnprocessableEntityException(`Provided offer doesn't exist.`);
+    }
+
+    const currentTimestamp = getCurrentUnixTimestamp();
+
+    const offerTimestamp = offer.getTimestamp();
+    const offerOpensAfterTimestamp = offer.getOpensAfterTimestamp();
+    const offerDurationInSeconds = offer.getDurationInSeconds();
+
+    if (currentTimestamp >= offerTimestamp || offerOpensAfterTimestamp > currentTimestamp) {
+      throw new UnprocessableEntityException('Provided offer is not available.');
     }
 
     const user = await this.userService.getById(params.userId);
 
     if (!user) {
-      throw new BadRequestException('Provided user is not found');
+      throw new UnprocessableEntityException(`Provided user doesn't exist.`);
     }
 
-    if (offer.getDay() !== getCurrentDayInUtc() + 1) {
-      throw new BadRequestException('Provided offer is not available.');
+    const participation = await this.tournamentParticipationService.getUserParticipationInTournament(
+      user.getId(),
+      offer.getTournamentId(),
+    );
+
+    if (!participation) {
+      throw new UnprocessableEntityException('User is not a participant of the tournament.');
+    }
+
+    const [existingPortfolio] = await this.portfolioRepository.find({
+      filter: {
+        userId: user.getId(),
+        offerIds: [params.offerId],
+      },
+      limit: 1,
+    });
+
+    if (existingPortfolio) {
+      throw new UnprocessableEntityException('Portfolio for this day already submitted.');
     }
 
     this.validateSelectedTokens(params.selectedTokens, offer);
-
-    const portfolioForProvidedOfferExists = await this.portfolioRepository.existsByUserIdAndOfferId(
-      params.userId,
-      params.offerId,
-    );
-
-    if (portfolioForProvidedOfferExists) {
-      throw new BadRequestException('Portfolio for this day already submitted.');
-    }
 
     return this.portfolioRepository.createOne({
       user: params.userId,
       selectedTokens: params.selectedTokens,
       offer: params.offerId,
+      tournament: offer.getTournamentId(),
+      intervalStartTimestamp: offerTimestamp,
+      intervalEndTimestamp: offerTimestamp + offerDurationInSeconds,
       isAwarded: false,
+    });
+  }
+
+  public updateCards(portfolioId: string) {
+    return this.transactionsManager.useTransaction(async () => {
+      const portfolio = await this.getByIdIfExists(portfolioId);
+
+      if (!portfolio.getTournamentId()) {
+        throw new UnprocessableEntityException('Portfolio is not related to the tournament.');
+      }
+
+      const deck = await this.tournamentDeckService.getUserDeckForTournament(
+        portfolio.getUserId(),
+        portfolio.getTournamentId(),
+      );
+
+      if (!deck) {
+        throw new UnprocessableEntityException('Cannot find user deck for the tournament.');
+      }
+
+      return portfolio;
     });
   }
 
   @Cron('*/30 * * * *')
   public async awardPortfolios() {
-    const offers = await this.portfolioOfferService.listOffersWaitingForCompletion();
+    const [latestCompletedCoinsPricingRecord] = await this.coinsPricingService.list({
+      filter: {
+        completed: true,
+      },
+      sort: [
+        {
+          field: CoinsPricingRecordSortField.Timestamp,
+          direction: SortDirection.Descending,
+        },
+      ],
+      limit: 1,
+    });
 
-    if (!offers.length) {
+    if (!latestCompletedCoinsPricingRecord) {
       return;
     }
 
-    const firstOfferDay = offers[0].getDay();
-    const lastOfferDay = offers[offers.length - 1].getDay();
+    const coinsPricingRecordsCache: Record<number, CoinsPricingRecordEntity> = {
+      [latestCompletedCoinsPricingRecord.getTimestamp()]: latestCompletedCoinsPricingRecord,
+    };
 
-    const tournaments = await this.tournamentService.listBetweenDays(firstOfferDay, lastOfferDay);
+    const cursor = this.portfolioRepository.findAsCursor({
+      filter: {
+        isAwarded: false,
+        intervalEndsBefore: latestCompletedCoinsPricingRecord.getTimestamp(),
+      },
+      sort: [
+        {
+          field: PortfolioSortingField.IntervalStartTimestamp,
+          direction: SortDirection.Ascending,
+        },
+      ],
+    });
 
-    for (const offer of offers) {
-      try {
-        const offerPriceChanges = offer.getPriceChanges();
+    await processCursor<PortfolioEntity>(cursor, async (portfolios) => {
+      const coinPricingTimestampsToLoadSet = portfolios.reduce((previousSet, portfolio) => {
+        const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
 
-        const portfolios = await this.portfolioRepository.find({
-          offerId: offer.getId(),
-          isAwarded: false,
-        });
+        if (!coinsPricingRecordsCache[intervalStartTimestamp]) {
+          previousSet.add(intervalStartTimestamp);
+        }
 
-        for (const portfolio of portfolios) {
+        if (!coinsPricingRecordsCache[intervalEndTimestamp]) {
+          previousSet.add(intervalEndTimestamp);
+        }
+
+        return previousSet;
+      }, new Set<number>());
+
+      const coinsPricingRecords = await this.coinsPricingService.list({
+        filter: {
+          timestamps: Array.from(coinPricingTimestampsToLoadSet),
+        },
+      });
+
+      for (const coinsPricingRecord of coinsPricingRecords) {
+        coinsPricingRecordsCache[coinsPricingRecord.getTimestamp()] = coinsPricingRecord;
+      }
+
+      for (const portfolio of portfolios) {
+        try {
+          const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
+
+          const intervalStartPrices = coinsPricingRecordsCache[intervalStartTimestamp].getPrices();
+          const intervalEndPrices = coinsPricingRecordsCache[intervalEndTimestamp].getPrices();
+
+          if (!intervalStartPrices || !intervalEndPrices) {
+            continue;
+          }
+
           const earnedCoins = portfolio.getSelectedTokens().reduce((previousCoins, selectedToken) => {
-            const percentage = offerPriceChanges[selectedToken.id];
+            const startIntervalTokenPrice = intervalStartPrices[selectedToken.id];
+            const endIntervalTokenPrice = intervalEndPrices[selectedToken.id];
 
-            if (typeof percentage !== 'number') {
-              throw new Error('Percentage change not found for token.');
-            }
+            const percentage = ((endIntervalTokenPrice - startIntervalTokenPrice) / startIntervalTokenPrice) * 100;
 
             return previousCoins + (selectedToken.direction === 'falling' ? -percentage : percentage);
           }, 0);
@@ -138,30 +245,32 @@ export class PortfolioServiceImpl implements PortfolioService {
               earnedCoins: round(earnedCoins, 2),
             });
 
-            await this.userService.addCoins(portfolio.getUserId(), earnedCoins);
-
-            await this.tournamentParticipationService.bulkAddPoints(
-              tournaments.map((tournament) => tournament.getId()),
-              portfolio.getUserId(),
-              earnedCoins,
-            );
+            if (portfolio.getTournamentId()) {
+              await this.tournamentParticipationService.addPoints(
+                portfolio.getUserId(),
+                portfolio.getTournamentId(),
+                earnedCoins,
+              );
+            } else {
+              await this.userService.addCoins(portfolio.getUserId(), Math.max(0, earnedCoins * 2));
+            }
           });
+        } catch (error) {
+          Logger.error(`Failed to award portfolio with ${portfolio.getId()} id: `, error);
         }
-
-        await this.portfolioOfferService.markOfferCompleted(offer.getId());
-
-        Logger.log(`Offer ${offer.getId()} completed, updated ${portfolios.length} portfolios.`);
-      } catch (error) {
-        Logger.error(`Failed to award portfolios for offer: ${offer.getId()}`, error);
       }
-    }
+    });
   }
 
-  private validateSelectedTokens(selectedTokens: SelectedPortfolioToken[], offer: PortfolioOfferEntity) {
+  private validateSelectedTokens(selectedTokens: SelectedPortfolioToken[], offer: TokensOfferEntity) {
     const offerTokens = offer.getTokens();
 
-    return selectedTokens.every((token) => {
-      return offerTokens.includes(token.id);
+    const hasInvalidTokens = selectedTokens.some((token) => {
+      return !offerTokens.includes(token.id);
     });
+
+    if (hasInvalidTokens) {
+      throw new UnprocessableEntityException('Selected tokens are not valid for the offer.');
+    }
   }
 }

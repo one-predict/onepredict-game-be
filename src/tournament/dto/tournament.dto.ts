@@ -1,6 +1,9 @@
-import { IsNumber } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
+import { TournamentStatus } from '@tournament/enums';
 
-export class GetTournamentByDisplayIdDto {
-  @IsNumber()
-  tournamentDisplayId: number;
+export class ListLatestTournamentsDto {
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.values(TournamentStatus))
+  status?: TournamentStatus;
 }
