@@ -32,6 +32,8 @@ export interface UserRepository {
   findById(id: string): Promise<UserEntity | null>;
   create(params: CreateUserEntityParams): Promise<UserEntity>;
   updateById(id: string, params: UpdateUserEntityParams): Promise<UserEntity | null>;
+  getReferals(id: string): Promise<UserEntity[] | null>
+  getReferalsCount(id: string): Promise<number>
 }
 
 @Injectable()
@@ -39,7 +41,7 @@ export class MongoUserRepository implements UserRepository {
   public constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
-  ) {}
+  ) { }
 
   public async findByExternalId(externalId: string | number) {
     const user = await this.userModel
@@ -85,5 +87,25 @@ export class MongoUserRepository implements UserRepository {
       .exec();
 
     return user && new MongoUserEntity(user);
+  }
+
+  public async getReferals(id: string) {
+    const referals = await this.userModel
+      .find({ referrer: new ObjectId(id) })
+      .session(this.transactionsManager.getSession())
+      .lean()
+      .exec();
+
+    return referals && referals.map(referal => new MongoUserEntity(referal));
+  }
+
+  public async getReferalsCount(id: string) {
+    const count = await this.userModel
+      .countDocuments({ referrer: new ObjectId(id) })
+      .session(this.transactionsManager.getSession())
+      .lean()
+      .exec();
+
+    return count;
   }
 }
