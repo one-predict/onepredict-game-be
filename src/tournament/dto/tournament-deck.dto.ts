@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsIn, IsArray, ArrayMaxSize } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { IsIdentifier } from '@common/class-validators';
-import { GameCardId } from '@card';
+import { IsCardsStack } from '@card';
 
 export class ListMyTournamentDecksDto {
   @IsNotEmpty()
@@ -9,8 +9,7 @@ export class ListMyTournamentDecksDto {
 }
 
 export class UpdateTournamentDeckDto {
-  @IsArray()
-  @ArrayMaxSize(100)
-  @IsIn(Object.values(GameCardId), { each: true })
-  cardIds?: GameCardId[];
+  @IsOptional()
+  @IsCardsStack()
+  cardsStack?: Record<string, number>;
 }

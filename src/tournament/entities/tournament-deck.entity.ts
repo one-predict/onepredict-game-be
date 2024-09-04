@@ -1,13 +1,15 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { GameCardId } from '@card';
 import { TournamentDeck } from '@tournament/schemas';
 
 export interface TournamentDeckEntity {
   getId(): string;
   getUserId(): string;
   getTournamentId(): string;
-  getCardIds(): GameCardId[];
+  getTotalDeckSize(): number;
+  getCardsStack(): Record<string, number>;
+  getUsedCardsStackByRound(): Record<number, Record<string, number>>;
+  getAllUsedCardsStack(): Record<string, number>;
 }
 
 export class MongoTournamentDeckEntity implements TournamentDeckEntity {
@@ -21,11 +23,23 @@ export class MongoTournamentDeckEntity implements TournamentDeckEntity {
     return this.tournamentDeckDocument.user.toString();
   }
 
-  public getCardIds() {
-    return this.tournamentDeckDocument.cards;
+  public getTotalDeckSize() {
+    return this.tournamentDeckDocument.totalDeckSize;
   }
 
   public getTournamentId() {
     return this.tournamentDeckDocument.tournament.toString();
+  }
+
+  public getCardsStack() {
+    return this.tournamentDeckDocument.cardsStack;
+  }
+
+  public getUsedCardsStackByRound() {
+    return this.tournamentDeckDocument.usedCardsStackByRound;
+  }
+
+  public getAllUsedCardsStack() {
+    return this.tournamentDeckDocument.allUsedCardsStack;
   }
 }

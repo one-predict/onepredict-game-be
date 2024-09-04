@@ -9,6 +9,7 @@ export interface PortfolioEntity {
   getTournamentId(): string | null;
   getCreatedAt(): Date;
   getInterval(): [number, number];
+  getAppliedCardsStack(): Record<string, number>;
   getSelectedTokens(): SelectedPortfolioToken[];
   getEarnedCoins(): number;
   isAwarded(): boolean;
@@ -31,6 +32,10 @@ export class MongoPortfolioEntity implements PortfolioEntity {
 
   public getOfferId() {
     return this.portfolioDocument.offer.toString();
+  }
+
+  public getAppliedCardsStack() {
+    return this.portfolioDocument.appliedCardsStack;
   }
 
   public getCreatedAt() {

@@ -7,6 +7,7 @@ import { TournamentModule } from '@tournament';
 import { CoreModule } from '@core';
 import { CardModule } from '@card';
 import { CoinModule } from '@coin';
+import { InventoryModule } from '@inventory';
 import { Portfolio, PortfolioSchema } from '@portfolio/schemas';
 import { PortfolioServiceImpl } from '@portfolio/services';
 import { PortfolioController } from '@portfolio/controllers';
@@ -23,6 +24,7 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     CoreModule,
     CardModule,
     CoinModule,
+    InventoryModule,
   ],
   controllers: [PortfolioController],
   providers: [

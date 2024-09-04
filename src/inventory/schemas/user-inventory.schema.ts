@@ -6,6 +6,7 @@ import { GameCardId } from '@card';
 export type UserInventoryDocument = HydratedDocument<UserInventory>;
 
 const DEFAULT_AVAILABLE_CARD_SLOTS = 3;
+const DEFAULT_AVAILABLE_PORTFOLIO_CARD_SLOTS = 1;
 
 @Schema({ collection: 'user_inventories' })
 export class UserInventory {
@@ -18,8 +19,11 @@ export class UserInventory {
   @Prop([{ required: true, type: mongoose.Schema.Types.String }])
   perks: string[];
 
-  @Prop({ required: true, type: mongoose.Schema.Types.Number, default: DEFAULT_AVAILABLE_CARD_SLOTS })
+  @Prop({ type: mongoose.Schema.Types.Number, default: DEFAULT_AVAILABLE_CARD_SLOTS })
   availableCardSlots: number;
+
+  @Prop({ type: mongoose.Schema.Types.Number, default: DEFAULT_AVAILABLE_PORTFOLIO_CARD_SLOTS })
+  availablePortfolioCardSlots: number;
 }
 
 export const UserInventorySchema = SchemaFactory.createForClass(UserInventory);

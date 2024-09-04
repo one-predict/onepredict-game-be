@@ -24,6 +24,7 @@ export default class UserInventoryController {
       purchasedCardIds: userInventory.getPurchasedCardIds(),
       purchasedPerkIds: userInventory.getPurchasedPerkIds(),
       availableCardSlots: userInventory.getAvailableCardSlots(),
+      availablePortfolioCardSlots: userInventory.getAvailablePortfolioCardSlots(),
     };
   }
 }

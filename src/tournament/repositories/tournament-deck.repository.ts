@@ -3,20 +3,23 @@ import { ObjectId } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
-import { GameCardId } from '@card';
 import { MongoTournamentDeckEntity, TournamentDeckEntity } from '@tournament/entities';
 import { TournamentDeck } from '@tournament/schemas';
 
 export interface CreateTournamentDeckEntityParams {
   user: string;
   tournament: string;
-  cards: GameCardId[];
-  usedCards: GameCardId[];
+  totalDeckSize: number;
+  cardsStack: Record<string, number>;
+  usedCardsStackByRound: Record<number, Record<string, number>>;
+  allUsedCardsStack: Record<string, number>;
 }
 
 export interface UpdateTournamentDeckEntityParams {
-  cards?: GameCardId[];
-  usedCards?: GameCardId[];
+  cardsStack?: Record<string, number>;
+  usedCardsStackByRound?: Record<number, Record<string, number>>;
+  allUsedCardsStack?: Record<string, number>;
+  totalDeckSize?: number;
 }
 
 export interface TournamentDeckRepository {
@@ -64,12 +67,23 @@ export class MongoTournamentDeckRepository implements TournamentDeckRepository {
   }
 
   public async updateOneById(id: string, params: UpdateTournamentDeckEntityParams) {
+    const { usedCardsStackByRound, ...restParams } = params;
+
+    const usedCardsStackByRoundUpdates = Object.keys(usedCardsStackByRound || {}).reduce((previousUpdates, key) => {
+      previousUpdates[`usedCardsStackByRound.${key}`] = usedCardsStackByRound[key];
+
+      return previousUpdates;
+    }, {});
+
     const deck = await this.tournamentDeckModel
       .findOneAndUpdate(
         {
           _id: new ObjectId(id),
         },
-        params,
+        {
+          ...restParams,
+          ...usedCardsStackByRoundUpdates,
+        },
         {
           new: true,
           session: this.transactionsManager.getSession(),

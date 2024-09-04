@@ -26,6 +26,9 @@ export class Tournament {
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   endTimestamp: number;
+
+  @Prop({ required: true, type: mongoose.Schema.Types.Number })
+  roundDurationInSeconds: number;
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);

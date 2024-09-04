@@ -31,7 +31,7 @@ export default class TournamentDeckController {
     @Body() body: UpdateTournamentDeckDto,
   ) {
     const tournament = await this.tournamentDeckService.update(deckId, {
-      cardIds: body.cardIds,
+      cardsStack: body.cardsStack,
     });
 
     return this.mapTournamentDeckToViewModel(tournament);
@@ -40,7 +40,10 @@ export default class TournamentDeckController {
   private mapTournamentDeckToViewModel(deck: TournamentDeckEntity) {
     return {
       id: deck.getId(),
-      cardIds: deck.getCardIds(),
+      totalDeckSize: deck.getTotalDeckSize(),
+      cardsStack: deck.getCardsStack(),
+      usedCardsStackByRound: deck.getUsedCardsStackByRound(),
+      allUsedCardsStack: deck.getAllUsedCardsStack(),
       userId: deck.getUserId(),
       tournamentId: deck.getTournamentId(),
     };

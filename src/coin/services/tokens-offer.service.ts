@@ -9,14 +9,20 @@ import { TokensOfferEntity } from '@coin/entities';
 import { Coin, TokensOfferSortField } from '@coin/enums';
 import { tokens } from '@coin/data';
 
+interface TokensOffersSeries {
+  next: TokensOfferEntity | null;
+  current: TokensOfferEntity | null;
+  previous: TokensOfferEntity[];
+}
+
 export interface TokensOfferService {
   getById(id: string): Promise<TokensOfferEntity | null>;
-  listLatest(tournamentId: string | null): Promise<TokensOfferEntity[]>;
+  getOffersSeries(tournamentId: string | null): Promise<TokensOffersSeries>;
 }
 
 @Injectable()
 export class TokensOfferServiceImpl implements TokensOfferService {
-  private readonly MAX_TOKENS_PER_LATEST_QUERY = 10;
+  private readonly MAX_OFFERS_PER_SERIES_QUERY = 30;
   private readonly MAX_TOKENS_PER_OFFER = 12;
   private readonly MAIN_GAME_NUMBER_OF_OFFERS_TO_GENERATE = 7 * 24; // 7 days * 24 hours
   private readonly MAIN_GAME_OFFERS_GENERATION_THRESHOLD = 60 * 60 * 24 * 3; // 3 days in seconds
@@ -24,7 +30,7 @@ export class TokensOfferServiceImpl implements TokensOfferService {
 
   constructor(@InjectTokensOfferRepository() private readonly tokensOfferRepository: TokensOfferRepository) {}
 
-  public async listLatest(tournamentId: string | null) {
+  public async getOffersSeries(tournamentId: string | null) {
     const [currentOffer, ...previousOffers] = await this.tokensOfferRepository.find({
       filter: {
         tournamentId,
@@ -36,11 +42,15 @@ export class TokensOfferServiceImpl implements TokensOfferService {
           direction: SortDirection.Descending,
         },
       ],
-      limit: this.MAX_TOKENS_PER_LATEST_QUERY,
+      limit: this.MAX_OFFERS_PER_SERIES_QUERY,
     });
 
     if (!currentOffer) {
-      return [];
+      return {
+        next: null,
+        current: null,
+        previous: [],
+      };
     }
 
     const [nextOffer] = await this.tokensOfferRepository.find({
@@ -57,7 +67,11 @@ export class TokensOfferServiceImpl implements TokensOfferService {
       limit: 1,
     });
 
-    return [nextOffer, currentOffer, ...previousOffers];
+    return {
+      next: nextOffer ?? null,
+      current: currentOffer ?? null,
+      previous: previousOffers,
+    };
   }
 
   public getById(id: string) {

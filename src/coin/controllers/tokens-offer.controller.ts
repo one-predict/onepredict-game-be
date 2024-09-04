@@ -9,12 +9,16 @@ import { ListLatestTokensOffersDto } from '@coin/dto';
 export default class TokensOfferController {
   constructor(@InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService) {}
 
-  @Get('/tokens-offers/latest')
+  @Get('/tokens-offers/series')
   @UseGuards(AuthGuard)
-  public async getLatestTokenOffers(@Query() query: ListLatestTokensOffersDto) {
-    const tokensOffers = await this.tokensOfferService.listLatest(query.tournamentId ?? null);
+  public async getOffersSeries(@Query() query: ListLatestTokensOffersDto) {
+    const series = await this.tokensOfferService.getOffersSeries(query.tournamentId ?? null);
 
-    return tokensOffers.map((tokensOffer) => this.mapTokensOfferToViewModel(tokensOffer));
+    return {
+      next: series.next ? this.mapTokensOfferToViewModel(series.next) : null,
+      current: series.current ? this.mapTokensOfferToViewModel(series.current) : null,
+      previous: series.previous.map((offer) => this.mapTokensOfferToViewModel(offer)),
+    };
   }
 
   private mapTokensOfferToViewModel(tokensOffer: TokensOfferEntity) {

@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { GameCardId } from '@card';
 
 export type PortfolioDocument = HydratedDocument<Portfolio>;
 
@@ -20,7 +19,7 @@ const SelectedPortfolioToken = new mongoose.Schema(
   { _id: false },
 );
 
-@Schema()
+@Schema({ minimize: false })
 export class Portfolio {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   user: ObjectId;
@@ -46,8 +45,8 @@ export class Portfolio {
   @Prop({ required: true, type: mongoose.Schema.Types.Boolean })
   isAwarded: boolean;
 
-  @Prop([{ required: false, type: mongoose.Schema.Types.String, enum: Object.values(GameCardId) }])
-  cards: GameCardId[];
+  @Prop({ required: false, type: mongoose.Schema.Types.Mixed, default: {} })
+  appliedCardsStack: Record<string, number>;
 
   @Prop({ type: mongoose.Schema.Types.Date })
   createdAt: Date;

@@ -1,10 +1,17 @@
 import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
-import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
 import {
+  getTournamentRoundByTimestamp,
   InjectTournamentDeckService,
   InjectTournamentParticipationService,
   InjectTournamentService,
@@ -12,6 +19,7 @@ import {
   TournamentParticipationService,
   TournamentService,
 } from '@tournament';
+import { InjectUserInventoryService, UserInventoryService } from '@inventory';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import {
   InjectCoinsPricingService,
@@ -27,7 +35,6 @@ import { FindPortfolioEntitiesQuery, PortfolioRepository } from '@portfolio/repo
 import { PortfolioEntity } from '@portfolio/entities';
 import { SelectedPortfolioToken } from '@portfolio/schemas';
 import { PortfolioSortingField } from '@portfolio/enums';
-import { GameCardId } from '@card';
 
 export type ListPortfoliosParams = FindPortfolioEntitiesQuery;
 
@@ -37,15 +44,10 @@ export interface CreatePortfolioParams {
   offerId: string;
 }
 
-export interface UpdatePortfolioCardsParams {
-  cardsToAdd: GameCardId[];
-  cardsToRemove: GameCardId[];
-}
-
 export interface PortfolioService {
   list(params: ListPortfoliosParams): Promise<PortfolioEntity[]>;
   create(params: CreatePortfolioParams): Promise<PortfolioEntity>;
-  updateCards(portfolioId: string, params: UpdatePortfolioCardsParams): Promise<PortfolioEntity>;
+  applyCards(portfolioId: string, cardsStack: Record<string, number>, applierId?: string): Promise<PortfolioEntity>;
 }
 
 @Injectable()
@@ -54,6 +56,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
     @InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService,
     @InjectCoinsPricingService() private readonly coinsPricingService: CoinsPricingService,
+    @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectTournamentParticipationService()
     private readonly tournamentParticipationService: TournamentParticipationService,
@@ -137,7 +140,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     });
   }
 
-  public updateCards(portfolioId: string) {
+  public applyCards(portfolioId: string, cardsStack: Record<string, number>, applierId?: string) {
     return this.transactionsManager.useTransaction(async () => {
       const portfolio = await this.getByIdIfExists(portfolioId);
 
@@ -145,16 +148,55 @@ export class PortfolioServiceImpl implements PortfolioService {
         throw new UnprocessableEntityException('Portfolio is not related to the tournament.');
       }
 
-      const deck = await this.tournamentDeckService.getUserDeckForTournament(
-        portfolio.getUserId(),
-        portfolio.getTournamentId(),
-      );
+      const tournament = await this.tournamentService.getById(portfolio.getTournamentId());
 
-      if (!deck) {
-        throw new UnprocessableEntityException('Cannot find user deck for the tournament.');
+      if (!tournament) {
+        throw new UnprocessableEntityException("Tournament doesn't exist.");
       }
 
-      return portfolio;
+      if (applierId && portfolio.getUserId() !== applierId) {
+        throw new UnprocessableEntityException("You can't apply cards to the portfolio of another user.");
+      }
+
+      const currentTimestamp = getCurrentUnixTimestamp();
+      const [portfolioStartTimestamp] = portfolio.getInterval();
+
+      if (currentTimestamp >= portfolioStartTimestamp) {
+        throw new UnprocessableEntityException("You can't apply cards to this portfolio cause it's in live.");
+      }
+
+      const userInventory = await this.userInventoryService.getForUser(portfolio.getUserId());
+
+      if (!userInventory) {
+        throw new InternalServerErrorException("User inventory doesn't exists.");
+      }
+
+      const totalAppliedCards = Object.values(cardsStack).reduce((total, count) => total + count, 0);
+
+      if (totalAppliedCards > userInventory.getAvailablePortfolioCardSlots()) {
+        throw new UnprocessableEntityException('Not enough portfolio card slots.');
+      }
+
+      const portfolioRoundInTournament = getTournamentRoundByTimestamp(
+        portfolioStartTimestamp,
+        tournament.getStartTimestamp(),
+        tournament.getRoundDurationInSeconds(),
+      );
+
+      await this.tournamentDeckService.updateUserDeckUsedCards(portfolio.getUserId(), portfolio.getTournamentId(), {
+        cardsStack: cardsStack,
+        round: portfolioRoundInTournament,
+      });
+
+      const updatedPortfolio = await this.portfolioRepository.updateOneById(portfolio.getId(), {
+        appliedCardsStack: cardsStack,
+      });
+
+      if (!updatedPortfolio) {
+        throw new NotFoundException('Portfolio is not found.');
+      }
+
+      return updatedPortfolio;
     });
   }
 

@@ -9,6 +9,7 @@ export interface UserInventoryEntity {
   getPurchasedCardIds(): GameCardId[];
   getPurchasedPerkIds(): string[];
   getAvailableCardSlots(): number;
+  getAvailablePortfolioCardSlots(): number;
 }
 
 export class MongoUserInventoryEntity implements UserInventoryEntity {
@@ -32,5 +33,9 @@ export class MongoUserInventoryEntity implements UserInventoryEntity {
 
   public getAvailableCardSlots() {
     return this.userInventoryDocument.availableCardSlots;
+  }
+
+  public getAvailablePortfolioCardSlots() {
+    return this.userInventoryDocument.availablePortfolioCardSlots;
   }
 }

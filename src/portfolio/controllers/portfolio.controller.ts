@@ -1,10 +1,9 @@
-import { Controller, Session, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
+import { Controller, Session, Get, UseGuards, Query, Post, Body, Put, Param } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
 import { AuthGuard } from '@common/guards';
-import { ParseIdentifiersArrayPipe } from '@common/pipes';
 import { PortfolioService } from '@portfolio/services';
 import { InjectPortfolioService } from '@portfolio/decorators';
-import { CreatePortfolioForCurrentUserDto } from '@portfolio/dto';
+import { ApplyCardsToPortfolioDto, CreatePortfolioDto, ListPortfoliosDto } from '@portfolio/dto';
 import { PortfolioEntity } from '@portfolio/entities';
 
 @Controller()
@@ -15,13 +14,10 @@ export default class PortfolioController {
 
   @Get('/portfolios/my')
   @UseGuards(AuthGuard)
-  public async listMyPortfolios(
-    @Session() session: secureSession.Session,
-    @Query('offerIds', new ParseIdentifiersArrayPipe({ separator: ',', maxCount: 15 })) offerIds: string[],
-  ) {
+  public async listMyPortfolios(@Session() session: secureSession.Session, @Query() query: ListPortfoliosDto) {
     const portfolios = await this.portfolioService.list({
       filter: {
-        offerIds,
+        offerIds: query.offerIds,
         userId: session.get('userId'),
       },
     });
@@ -31,15 +27,24 @@ export default class PortfolioController {
 
   @Post('/portfolios')
   @UseGuards(AuthGuard)
-  public async createPortfolioForCurrentUser(
-    @Session() session: secureSession.Session,
-    @Body() createPortfolioForCurrentUserDto: CreatePortfolioForCurrentUserDto,
-  ) {
+  public async createPortfolio(@Session() session: secureSession.Session, @Body() body: CreatePortfolioDto) {
     const portfolio = await this.portfolioService.create({
       userId: session.get('userId'),
-      selectedTokens: createPortfolioForCurrentUserDto.selectedTokens,
-      offerId: createPortfolioForCurrentUserDto.offerId,
+      selectedTokens: body.selectedTokens,
+      offerId: body.offerId,
     });
+
+    return this.mapPortfolioEntityToViewModel(portfolio);
+  }
+
+  @Put('/portfolios/:id/cards')
+  @UseGuards(AuthGuard)
+  public async applyCardsToPortfolio(
+    @Session() session: secureSession.Session,
+    @Param('id') id: string,
+    @Body() body: ApplyCardsToPortfolioDto,
+  ) {
+    const portfolio = await this.portfolioService.applyCards(id, body.cardsStack, session.get('userId'));
 
     return this.mapPortfolioEntityToViewModel(portfolio);
   }
@@ -50,6 +55,9 @@ export default class PortfolioController {
       offerId: portfolio.getOfferId(),
       userId: portfolio.getUserId(),
       selectedTokens: portfolio.getSelectedTokens(),
+      appliedCardsStack: portfolio.getAppliedCardsStack(),
+      interval: portfolio.getInterval(),
+      tournamentId: portfolio.getTournamentId(),
       earnedCoins: portfolio.getEarnedCoins(),
       isAwarded: portfolio.isAwarded(),
       createdAt: portfolio.getCreatedAt(),
