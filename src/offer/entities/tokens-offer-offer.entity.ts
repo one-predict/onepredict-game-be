@@ -1,6 +1,6 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { TokensOffer } from '@coin/schemas';
+import { TokensOffer } from '@offer/schemas';
 
 export interface TokensOfferEntity {
   getId(): string;

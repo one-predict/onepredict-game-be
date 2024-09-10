@@ -37,6 +37,8 @@
       "@marketplace": ["./src/marketplace"],
       "@coin/*": ["./src/coin/*"],
       "@coin": ["./src/coin"],
+      "@offer/*": ["./src/offer/*"],
+      "@offer": ["./src/offer"]
     }
   }
 }

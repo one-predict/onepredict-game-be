@@ -1,1 +1,1 @@
-export { default as TokensOfferController } from './tokens-offer.controller';
+export { default as CoinsPricingInfoController } from './coins-pricing-info.controller';

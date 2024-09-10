@@ -3,6 +3,6 @@ export * from './repositories';
 export * from './entities';
 export * from './decorators';
 export * from './enums';
-export * from './coin.module';
+export * from './offer.module';
 
-export { default as CoinModuleTokens } from './coin.module.tokens';
+export { default as OfferModuleTokens } from './offer.module.tokens';

@@ -3,44 +3,44 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CoreModule } from '@core';
-import { CoinsPricingRecord, TokensOffer, TokensOfferSchema, CoinsPricingRecordSchema } from '@coin/schemas';
-import { CoinsPricingServiceImpl, TokensOfferServiceImpl } from '@coin/services';
-import { TokensOfferController } from '@coin/controllers';
-import { MongoCoinsPricingRecordRepository, MongoTokensOfferRepository } from '@coin/repositories';
+import { CoinsPricingInfoController } from "@coin/controllers";
+import { CoinsHistoricalRecord, CoinsPricingInfo, CoinsPricingInfoSchema, CoinsHistoricalRecordSchema } from '@coin/schemas';
+import { CoinsHistoryServiceImpl, CoinsPricingServiceImpl } from '@coin/services';
+import { MongoCoinsHistoricalRecordRepository, MongoCoinsPricingInfoRepository } from '@coin/repositories';
 import { CryptoCompareCoinsApi } from '@coin/api';
 import CoinModuleTokens from './coin.module.tokens';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: TokensOffer.name, schema: TokensOfferSchema }]),
-    MongooseModule.forFeature([{ name: CoinsPricingRecord.name, schema: CoinsPricingRecordSchema }]),
+    MongooseModule.forFeature([{ name: CoinsPricingInfo.name, schema: CoinsPricingInfoSchema }]),
+    MongooseModule.forFeature([{ name: CoinsHistoricalRecord.name, schema: CoinsHistoricalRecordSchema }]),
     ConfigModule,
     HttpModule,
     CoreModule,
   ],
-  controllers: [TokensOfferController],
+  controllers: [CoinsPricingInfoController],
   providers: [
     {
-      provide: CoinModuleTokens.Services.TokensOfferService,
-      useClass: TokensOfferServiceImpl,
-    },
-    {
-      provide: CoinModuleTokens.Repositories.TokensOfferRepository,
-      useClass: MongoTokensOfferRepository,
+      provide: CoinModuleTokens.Services.CoinsHistoryService,
+      useClass: CoinsHistoryServiceImpl,
     },
     {
       provide: CoinModuleTokens.Services.CoinsPricingService,
       useClass: CoinsPricingServiceImpl,
     },
     {
-      provide: CoinModuleTokens.Repositories.CoinsPricingRecordRepository,
-      useClass: MongoCoinsPricingRecordRepository,
+      provide: CoinModuleTokens.Repositories.CoinsHistoricalRecordRepository,
+      useClass: MongoCoinsHistoricalRecordRepository,
+    },
+    {
+      provide: CoinModuleTokens.Repositories.CoinsPricingInfoRepository,
+      useClass: MongoCoinsPricingInfoRepository,
     },
     {
       provide: CoinModuleTokens.Api.CoinsApi,
       useClass: CryptoCompareCoinsApi,
     },
   ],
-  exports: [CoinModuleTokens.Services.TokensOfferService, CoinModuleTokens.Services.CoinsPricingService],
+  exports: [CoinModuleTokens.Services.CoinsHistoryService, CoinModuleTokens.Services.CoinsPricingService],
 })
 export class CoinModule {}

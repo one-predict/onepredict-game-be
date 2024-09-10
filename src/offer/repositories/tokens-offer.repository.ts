@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
+import { transformSortArrayToSortObject } from '@common/utils';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { MatchRange } from '@common/data/aggregations';
-import { TokensOffer } from '@coin/schemas';
-import { MongoTokensOfferEntity, TokensOfferEntity } from '@coin/entities';
-import { TokensOfferSortField } from '@coin/enums';
+import { TokensOffer } from '@offer/schemas';
+import { MongoTokensOfferEntity, TokensOfferEntity } from '@offer/entities';
+import { TokensOfferSortField } from '@offer/enums';
 import { FindEntitiesQuery } from '@common/types';
-import transformSortArrayToSortObject from '../../common/utils/mongoose.utils';
 
 export type FindTokensOfferEntitiesQuery = FindEntitiesQuery<
   {

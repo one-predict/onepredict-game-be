@@ -15,6 +15,17 @@ interface CryptoCompareHistohourResponse {
   TimeTo: number;
 }
 
+interface CryptoCompareLatestPriceMultiFullResponse {
+  RAW: Record<string, {
+    USD: {
+      PRICE: number;
+      CHANGEPCT24HOUR: number;
+      CHANGEPCTHOUR: number;
+      LASTUPDATE: number;
+    };
+  }>;
+}
+
 export interface CoinHistoryItem {
   time: number;
   open: number;
@@ -23,6 +34,12 @@ export interface CoinHistoryItem {
 
 export interface CoinsApi {
   getCoinHourlyHistory(coin: Coin): Promise<CoinHistoryItem[]>;
+  getCoinsLatestPrices(coins: Coin[]): Promise<Partial<Record<Coin, {
+    price: number;
+    percentChange24h: number;
+    percentChange1h: number;
+    lastUpdateTimestamp: number;
+  }>>>;
 }
 
 @Injectable()
@@ -45,7 +62,7 @@ export class CryptoCompareCoinsApi implements CoinsApi {
     [Coin.Dogecoin]: 'DOGE',
     [Coin.Ethereum]: 'ETH',
     [Coin.Fantom]: 'FTM',
-    [Coin.Jupiter]: 'JUPI',
+    [Coin.Jupiter]: 'JUP',
     [Coin.Litecoin]: 'LTC',
     [Coin.Mantle]: 'MANTLE',
     [Coin.Near]: 'NEAR',
@@ -93,5 +110,41 @@ export class CryptoCompareCoinsApi implements CoinsApi {
         close: item.close,
       };
     });
+  }
+
+  public async getCoinsLatestPrices(coins: Coin[]) {
+    const searchParams = new URLSearchParams();
+
+    const fsymToCoinsMap: Record<string, string> = {};
+
+    coins.forEach((coin) => {
+      searchParams.append('fsyms', this.COIN_TO_FSYM_MAP[coin]);
+
+      fsymToCoinsMap[this.COIN_TO_FSYM_MAP[coin]] = coin;
+    });
+
+    searchParams.append('tsyms', 'USD');
+
+    const observable = await this.httpService.get<CryptoCompareLatestPriceMultiFullResponse>(
+      `${this.cryptoCompareApiUrl}/pricemultifull?${searchParams}`,
+      {
+        headers: new AxiosHeaders({
+          Authorization: `ApiKey ${this.cryptoCompareApiKey}`,
+        }),
+      },
+    );
+
+    const { data: responseData } = await firstValueFrom(observable.pipe());
+
+    return Object.keys(responseData.RAW).reduce((pricingInformation, key) => {
+      pricingInformation[fsymToCoinsMap[key]] = {
+        price: responseData.RAW[key].USD.PRICE,
+        percentChange24h: responseData.RAW[key].USD.CHANGEPCT24HOUR,
+        percentChange1h: responseData.RAW[key].USD.CHANGEPCTHOUR,
+        lastUpdateTimestamp: responseData.RAW[key].USD.LASTUPDATE,
+      };
+
+      return pricingInformation;
+    }, {});
   }
 }

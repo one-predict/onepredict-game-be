@@ -1,2 +1,2 @@
-export * from './tokens-offer.service';
+export * from './coins-history.service';
 export * from './coins-pricing.service';

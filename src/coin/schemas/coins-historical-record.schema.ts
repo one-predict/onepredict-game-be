@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Coin } from '@coin/enums';
 
-export type CoinsPricingRecordDocument = HydratedDocument<CoinsPricingRecord>;
+export type CoinsHistoricalRecordDocument = HydratedDocument<CoinsHistoricalRecord>;
 
-@Schema({ collection: 'coins_pricing_record', minimize: false })
-export class CoinsPricingRecord {
+@Schema({ collection: 'coins_historical_records', minimize: false })
+export class CoinsHistoricalRecord {
   @Prop({ required: true, type: mongoose.Schema.Types.Mixed })
   prices: Record<Coin, number>;
 
@@ -16,7 +16,7 @@ export class CoinsPricingRecord {
   completed: boolean;
 }
 
-export const CoinsPricingRecordSchema = SchemaFactory.createForClass(CoinsPricingRecord);
+export const CoinsHistoricalRecordSchema = SchemaFactory.createForClass(CoinsHistoricalRecord);
 
-CoinsPricingRecordSchema.index({ timestamp: 1 }, { unique: true });
-CoinsPricingRecordSchema.index({ completed: 1, timestamp: 1 });
+CoinsHistoricalRecordSchema.index({ timestamp: 1 }, { unique: true });
+CoinsHistoricalRecordSchema.index({ completed: 1, timestamp: 1 });

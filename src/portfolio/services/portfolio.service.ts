@@ -10,6 +10,7 @@ import {
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
+import {InjectTokensOfferService, TokensOfferEntity, TokensOfferService} from "@offer";
 import {
   getTournamentRoundByTimestamp,
   InjectTournamentDeckService,
@@ -22,13 +23,10 @@ import {
 import { InjectUserInventoryService, UserInventoryService } from '@inventory';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import {
-  InjectCoinsPricingService,
-  InjectTokensOfferService,
-  CoinsPricingService,
-  TokensOfferService,
-  TokensOfferEntity,
-  CoinsPricingRecordEntity,
-  CoinsPricingRecordSortField,
+  InjectCoinsHistoryService,
+  CoinsHistoryService,
+  CoinsHistoricalRecordEntity,
+  CoinsHistoricalRecordSortField,
 } from '@coin';
 import { InjectPortfolioRepository } from '@portfolio/decorators';
 import { FindPortfolioEntitiesQuery, PortfolioRepository } from '@portfolio/repositories';
@@ -55,7 +53,7 @@ export class PortfolioServiceImpl implements PortfolioService {
   constructor(
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
     @InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService,
-    @InjectCoinsPricingService() private readonly coinsPricingService: CoinsPricingService,
+    @InjectCoinsHistoryService() private readonly coinsHistoryService: CoinsHistoryService,
     @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectTournamentParticipationService()
@@ -202,31 +200,31 @@ export class PortfolioServiceImpl implements PortfolioService {
 
   @Cron('*/30 * * * *')
   public async awardPortfolios() {
-    const [latestCompletedCoinsPricingRecord] = await this.coinsPricingService.list({
+    const [latestCompletedCoinsHistoricalRecord] = await this.coinsHistoryService.list({
       filter: {
         completed: true,
       },
       sort: [
         {
-          field: CoinsPricingRecordSortField.Timestamp,
+          field: CoinsHistoricalRecordSortField.Timestamp,
           direction: SortDirection.Descending,
         },
       ],
       limit: 1,
     });
 
-    if (!latestCompletedCoinsPricingRecord) {
+    if (!latestCompletedCoinsHistoricalRecord) {
       return;
     }
 
-    const coinsPricingRecordsCache: Record<number, CoinsPricingRecordEntity> = {
-      [latestCompletedCoinsPricingRecord.getTimestamp()]: latestCompletedCoinsPricingRecord,
+    const coinsHistoricalRecordsCache: Record<number, CoinsHistoricalRecordEntity> = {
+      [latestCompletedCoinsHistoricalRecord.getTimestamp()]: latestCompletedCoinsHistoricalRecord,
     };
 
     const cursor = this.portfolioRepository.findAsCursor({
       filter: {
         isAwarded: false,
-        intervalEndsBefore: latestCompletedCoinsPricingRecord.getTimestamp(),
+        intervalEndsBefore: latestCompletedCoinsHistoricalRecord.getTimestamp(),
       },
       sort: [
         {
@@ -237,36 +235,36 @@ export class PortfolioServiceImpl implements PortfolioService {
     });
 
     await processCursor<PortfolioEntity>(cursor, async (portfolios) => {
-      const coinPricingTimestampsToLoadSet = portfolios.reduce((previousSet, portfolio) => {
+      const coinHistoricalTimestampsToLoadSet = portfolios.reduce((previousSet, portfolio) => {
         const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
 
-        if (!coinsPricingRecordsCache[intervalStartTimestamp]) {
+        if (!coinsHistoricalRecordsCache[intervalStartTimestamp]) {
           previousSet.add(intervalStartTimestamp);
         }
 
-        if (!coinsPricingRecordsCache[intervalEndTimestamp]) {
+        if (!coinsHistoricalRecordsCache[intervalEndTimestamp]) {
           previousSet.add(intervalEndTimestamp);
         }
 
         return previousSet;
       }, new Set<number>());
 
-      const coinsPricingRecords = await this.coinsPricingService.list({
+      const coinsHistoricalRecords = await this.coinsHistoryService.list({
         filter: {
-          timestamps: Array.from(coinPricingTimestampsToLoadSet),
+          timestamps: Array.from(coinHistoricalTimestampsToLoadSet),
         },
       });
 
-      for (const coinsPricingRecord of coinsPricingRecords) {
-        coinsPricingRecordsCache[coinsPricingRecord.getTimestamp()] = coinsPricingRecord;
+      for (const coinsHistoricalRecord of coinsHistoricalRecords) {
+        coinsHistoricalRecordsCache[coinsHistoricalRecord.getTimestamp()] = coinsHistoricalRecord;
       }
 
       for (const portfolio of portfolios) {
         try {
           const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
 
-          const intervalStartPrices = coinsPricingRecordsCache[intervalStartTimestamp].getPrices();
-          const intervalEndPrices = coinsPricingRecordsCache[intervalEndTimestamp].getPrices();
+          const intervalStartPrices = coinsHistoricalRecordsCache[intervalStartTimestamp].getPrices();
+          const intervalEndPrices = coinsHistoricalRecordsCache[intervalEndTimestamp].getPrices();
 
           if (!intervalStartPrices || !intervalEndPrices) {
             continue;

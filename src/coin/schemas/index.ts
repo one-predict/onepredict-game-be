@@ -1,2 +1,2 @@
-export * from './tokens-offer.schema';
-export * from './coins-pricing-record.schema';
+export * from './coins-historical-record.schema';
+export * from './coins-pricing-info.schema';

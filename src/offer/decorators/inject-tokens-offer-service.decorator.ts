@@ -1,8 +1,8 @@
 import { Inject } from '@nestjs/common';
-import CoinModuleTokens from '@coin/coin.module.tokens';
+import OfferModuleTokens from '@offer/offer.module.tokens';
 
 const InjectTokensOfferService = () => {
-  return Inject(CoinModuleTokens.Services.TokensOfferService);
+  return Inject(OfferModuleTokens.Services.TokensOfferService);
 };
 
 export default InjectTokensOfferService;

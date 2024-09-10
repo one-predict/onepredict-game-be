@@ -3,11 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, getNearestHourInUnixTimestamp } from '@common/utils';
-import { InjectTokensOfferRepository } from '@coin/decorators';
-import { TokensOfferRepository } from '@coin/repositories';
-import { TokensOfferEntity } from '@coin/entities';
-import { Coin, TokensOfferSortField } from '@coin/enums';
-import { tokens } from '@coin/data';
+import {Coin} from "@coin";
+import { InjectTokensOfferRepository } from '@offer/decorators';
+import { TokensOfferRepository } from '@offer/repositories';
+import { TokensOfferEntity } from '@offer/entities';
+import { TokensOfferSortField } from '@offer/enums';
+import { tokens } from '@offer/data';
 
 interface TokensOffersSeries {
   next: TokensOfferEntity | null;

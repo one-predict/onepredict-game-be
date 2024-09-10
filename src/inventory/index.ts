@@ -4,4 +4,4 @@ export * from './entities';
 export * from './decorators';
 export * from './inventory.module';
 
-export { default as UserInventoryModuleTokens } from './inventory.module.tokens';
+export { default as InventoryModuleTokens } from './inventory.module.tokens';

@@ -1,2 +1,2 @@
-export * from './tokens-offer.repository';
-export * from './coins-pricing-record.repository';
+export * from './coins-historical-record.repository';
+export * from './coins-pricing-info.repository';

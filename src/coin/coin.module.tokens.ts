@@ -1,11 +1,11 @@
 const CoinModuleTokens = {
   Services: {
-    TokensOfferService: Symbol('TokensOfferService'),
+    CoinsHistoryService: Symbol('CoinsHistoryService'),
     CoinsPricingService: Symbol('CoinsPricingService'),
   },
   Repositories: {
-    TokensOfferRepository: Symbol('TokensOfferRepository'),
-    CoinsPricingRecordRepository: Symbol('CoinsPricingRecordRepository'),
+    CoinsHistoricalRecordRepository: Symbol('CoinsHistoricalRecordRepository'),
+    CoinsPricingInfoRepository: Symbol('CoinsPricingInfoRepository'),
   },
   Api: {
     CoinsApi: Symbol('CoinsApi'),

@@ -1,9 +1,9 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@common/guards';
-import { TokensOfferEntity } from '@coin/entities';
-import { TokensOfferService } from '@coin/services';
-import { InjectTokensOfferService } from '@coin/decorators';
-import { ListLatestTokensOffersDto } from '@coin/dto';
+import { TokensOfferEntity } from '@offer/entities';
+import { TokensOfferService } from '@offer/services';
+import { InjectTokensOfferService } from '@offer/decorators';
+import { ListLatestTokensOffersDto } from '@offer/dto';
 
 @Controller()
 export default class TokensOfferController {
