@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, getNearestHourInUnixTimestamp } from '@common/utils';
-import {Coin} from "@coin";
+import { Coin } from '@coin';
 import { InjectTokensOfferRepository } from '@offer/decorators';
 import { TokensOfferRepository } from '@offer/repositories';
 import { TokensOfferEntity } from '@offer/entities';

@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
+import { FindEntitiesQuery } from '@common/types';
+import { transformSortArrayToSortObject } from '@common/utils';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
 import { ExternalUserType } from '@user/enums';
+
+export type FindUserEntitiesQuery = FindEntitiesQuery<{
+  externalId?: string | number;
+  referrerId?: string;
+}>;
 
 interface CreateUserEntityParams {
   externalId: string | number;
@@ -28,12 +35,10 @@ interface UpdateUserEntityParams {
 }
 
 export interface UserRepository {
-  findByExternalId(externalId: string | number): Promise<UserEntity | null>;
+  find(query: FindUserEntitiesQuery): Promise<UserEntity[]>;
   findById(id: string): Promise<UserEntity | null>;
   create(params: CreateUserEntityParams): Promise<UserEntity>;
   updateById(id: string, params: UpdateUserEntityParams): Promise<UserEntity | null>;
-  getReferals(id: string): Promise<UserEntity[] | null>
-  getReferalsCount(id: string): Promise<number>
 }
 
 @Injectable()
@@ -41,16 +46,30 @@ export class MongoUserRepository implements UserRepository {
   public constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
-  ) { }
+  ) {}
 
-  public async findByExternalId(externalId: string | number) {
-    const user = await this.userModel
-      .findOne({ externalId })
-      .lean()
-      .session(this.transactionsManager.getSession())
+  public async find(query: FindUserEntitiesQuery) {
+    const mongodbQueryFilter: FilterQuery<User> = {};
+
+    if (query.filter?.externalId) {
+      mongodbQueryFilter.externalId = query.filter.externalId;
+    }
+
+    if (query.filter?.referrerId) {
+      mongodbQueryFilter.referrer = new ObjectId(query.filter.referrerId);
+    }
+
+    const users = await this.userModel
+      .find(mongodbQueryFilter, undefined, {
+        lean: true,
+        limit: query.limit,
+        skip: query.skip,
+        sort: query.sort && transformSortArrayToSortObject(query.sort),
+        session: this.transactionsManager.getSession(),
+      })
       .exec();
 
-    return user && new MongoUserEntity(user);
+    return users.map((user) => new MongoUserEntity(user));
   }
 
   public async findById(id: string) {
@@ -87,25 +106,5 @@ export class MongoUserRepository implements UserRepository {
       .exec();
 
     return user && new MongoUserEntity(user);
-  }
-
-  public async getReferals(id: string) {
-    const referals = await this.userModel
-      .find({ referrer: new ObjectId(id) })
-      .session(this.transactionsManager.getSession())
-      .lean()
-      .exec();
-
-    return referals && referals.map(referal => new MongoUserEntity(referal));
-  }
-
-  public async getReferalsCount(id: string) {
-    const count = await this.userModel
-      .countDocuments({ referrer: new ObjectId(id) })
-      .session(this.transactionsManager.getSession())
-      .lean()
-      .exec();
-
-    return count;
   }
 }

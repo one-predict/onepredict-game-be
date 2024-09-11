@@ -24,7 +24,8 @@ export class MongoCoinsPricingInfoRepository implements CoinsPricingInfoReposito
   ) {}
 
   public async findOne() {
-    const infoDocument = await this.coinsPricingInfoModel.findOne({})
+    const infoDocument = await this.coinsPricingInfoModel
+      .findOne({})
       .lean()
       .session(this.transactionsManager.getSession())
       .exec();
@@ -33,11 +34,14 @@ export class MongoCoinsPricingInfoRepository implements CoinsPricingInfoReposito
   }
 
   public async updateOne(params: UpdateCoinsPricingInfoEntityParams) {
-    const pricingDetailsUpdates = Object.keys(params.pricingDetails).reduce((previousUpdates, key) => {
-      previousUpdates[`pricingDetails.${key}`] = params.pricingDetails[key];
+    const pricingDetailsUpdates = Object.keys(params.pricingDetails).reduce(
+      (previousUpdates, key) => {
+        previousUpdates[`pricingDetails.${key}`] = params.pricingDetails[key];
 
-      return previousUpdates;
-    }, {} as Record<string, CoinsPricingDetails>);
+        return previousUpdates;
+      },
+      {} as Record<string, CoinsPricingDetails>,
+    );
 
     const infoDocument = await this.coinsPricingInfoModel
       .findOneAndUpdate({}, { $set: pricingDetailsUpdates }, { new: true })

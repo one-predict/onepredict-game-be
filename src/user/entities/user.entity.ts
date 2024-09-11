@@ -17,7 +17,7 @@ export interface UserEntity {
 }
 
 export class MongoUserEntity implements UserEntity {
-  constructor(private readonly userDocument: FlattenMaps<User> & { _id: ObjectId }) { }
+  constructor(private readonly userDocument: FlattenMaps<User> & { _id: ObjectId }) {}
 
   public getId() {
     return this.userDocument._id.toString();

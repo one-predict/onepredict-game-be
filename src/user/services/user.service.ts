@@ -26,10 +26,6 @@ export interface UpdateUserParams {
   onboarded?: boolean;
 }
 
-export type Referal = UserEntity & {
-  referalsCount: number;
-}
-
 export interface UserService {
   getById(id: string): Promise<UserEntity | null>;
   getByExternalId(externalId: string | number): Promise<UserEntity | null>;
@@ -38,7 +34,6 @@ export interface UserService {
   update(id: string, params: UpdateUserParams): Promise<UserEntity>;
   withdrawCoins(id: string, coins: number): Promise<void>;
   addCoins(id: string, coins: number): Promise<void>;
-  getReferals(userId: string): Promise<Referal[] | null>
 }
 
 @Injectable()
@@ -47,14 +42,21 @@ export class UserServiceImpl implements UserService {
     @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectUserRepository() private readonly userRepository: UserRepository,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
-  ) { }
+  ) {}
 
   public getById(id: string) {
     return this.userRepository.findById(id);
   }
 
-  public getByExternalId(externalId: string | number) {
-    return this.userRepository.findByExternalId(externalId);
+  public async getByExternalId(externalId: string | number) {
+    const [user] = await this.userRepository.find({
+      filter: {
+        externalId,
+      },
+      limit: 1,
+    });
+
+    return user;
   }
 
   public async getByExternalIdIfExists(externalId: string | number) {
@@ -131,26 +133,6 @@ export class UserServiceImpl implements UserService {
       await this.userRepository.updateById(id, {
         coinsBalance: round(user.getCoinsBalance() - coins, 2),
       });
-    });
-  }
-
-  public async getReferals(id: string) {
-    return await this.transactionsManager.useTransaction(async () => {
-      const user = await this.getById(id);
-
-      if (!user) {
-        throw new UnprocessableEntityException('Provided user is not found.');
-      }
-
-      const users = await this.userRepository.getReferals(id);
-      const referals: Referal[] = []
-      for await (const user of users) {
-        const referalsCount = await this.userRepository.getReferalsCount(user.getId())
-        const referal = Object.assign(user, { referalsCount })
-        referals.push(referal)
-      }
-
-      return referals
     });
   }
 }

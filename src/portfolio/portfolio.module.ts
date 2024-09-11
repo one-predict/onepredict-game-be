@@ -7,7 +7,7 @@ import { TournamentModule } from '@tournament';
 import { CoreModule } from '@core';
 import { CardModule } from '@card';
 import { CoinModule } from '@coin';
-import { OfferModule } from "@offer";
+import { OfferModule } from '@offer';
 import { InventoryModule } from '@inventory';
 import { Portfolio, PortfolioSchema } from '@portfolio/schemas';
 import { PortfolioServiceImpl } from '@portfolio/services';

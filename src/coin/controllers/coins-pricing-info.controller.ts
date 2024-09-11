@@ -1,8 +1,8 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@common/guards';
 import { InjectCoinsPricingService } from '@coin/decorators';
-import { CoinsPricingService } from "@coin/services";
-import { CoinsPricingInfoEntity } from "@coin";
+import { CoinsPricingService } from '@coin/services';
+import { CoinsPricingInfoEntity } from '@coin';
 
 @Controller()
 export default class CoinsPricingInfoController {
