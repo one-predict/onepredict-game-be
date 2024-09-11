@@ -48,8 +48,15 @@ export class UserServiceImpl implements UserService {
     return this.userRepository.findById(id);
   }
 
-  public getByExternalId(externalId: string | number) {
-    return this.userRepository.findByExternalId(externalId);
+  public async getByExternalId(externalId: string | number) {
+    const [user] = await this.userRepository.find({
+      filter: {
+        externalId,
+      },
+      limit: 1,
+    });
+
+    return user;
   }
 
   public async getByExternalIdIfExists(externalId: string | number) {

@@ -3,8 +3,13 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CoreModule } from '@core';
-import { CoinsPricingInfoController } from "@coin/controllers";
-import { CoinsHistoricalRecord, CoinsPricingInfo, CoinsPricingInfoSchema, CoinsHistoricalRecordSchema } from '@coin/schemas';
+import { CoinsPricingInfoController } from '@coin/controllers';
+import {
+  CoinsHistoricalRecord,
+  CoinsPricingInfo,
+  CoinsPricingInfoSchema,
+  CoinsHistoricalRecordSchema,
+} from '@coin/schemas';
 import { CoinsHistoryServiceImpl, CoinsPricingServiceImpl } from '@coin/services';
 import { MongoCoinsHistoricalRecordRepository, MongoCoinsPricingInfoRepository } from '@coin/repositories';
 import { CryptoCompareCoinsApi } from '@coin/api';

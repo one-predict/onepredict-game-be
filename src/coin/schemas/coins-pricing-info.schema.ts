@@ -4,12 +4,15 @@ import { Coin } from '@coin/enums';
 
 export type CoinsPricingInfoDocument = HydratedDocument<CoinsPricingInfo>;
 
-export type CoinsPricingDetails = Record<Coin, {
-  price: number;
-  percentChange24h: number;
-  percentChange1h: number;
-  lastUpdateTimestamp: number;
-}>;
+export type CoinsPricingDetails = Record<
+  Coin,
+  {
+    price: number;
+    percentChange24h: number;
+    percentChange1h: number;
+    lastUpdateTimestamp: number;
+  }
+>;
 
 @Schema({ collection: 'coins_pricing_info', minimize: false })
 export class CoinsPricingInfo {

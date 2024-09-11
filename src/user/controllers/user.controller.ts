@@ -45,6 +45,7 @@ export default class UserController {
       avatarUrl: user.getAvatarUrl(),
       coinsBalance: user.getCoinsBalance(),
       onboarded: user.getIsOnboarded(),
+      referer: user.getReferer(),
     };
   }
 }

@@ -4,8 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CoreModule } from '@core';
 import { InventoryModule } from '@inventory';
 import { User, UserSchema } from '@user/schemas';
-import { UserServiceImpl } from '@user/services';
-import { UserController } from '@user/controllers';
+import { UserServiceImpl, ReferralServiceImpl } from '@user/services';
+import { ReferralController, UserController } from '@user/controllers';
 import { MongoUserRepository } from '@user/repositories';
 import UserModuleTokens from './user.module.tokens';
 
@@ -16,11 +16,15 @@ import UserModuleTokens from './user.module.tokens';
     CoreModule,
     InventoryModule,
   ],
-  controllers: [UserController],
+  controllers: [UserController, ReferralController],
   providers: [
     {
       provide: UserModuleTokens.Services.UserService,
       useClass: UserServiceImpl,
+    },
+    {
+      provide: UserModuleTokens.Services.ReferralService,
+      useClass: ReferralServiceImpl,
     },
     {
       provide: UserModuleTokens.Repositories.UserRepository,

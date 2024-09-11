@@ -27,7 +27,8 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
   private readonly PRICE_SYNC_ALERT_THRESHOLD = 60 * 60 * 2; // 3 hours in seconds
 
   constructor(
-    @InjectCoinsHistoricalRecordRepository() private readonly coinsHistoricalRecordRepository: CoinsHistoricalRecordRepository,
+    @InjectCoinsHistoricalRecordRepository()
+    private readonly coinsHistoricalRecordRepository: CoinsHistoricalRecordRepository,
     @InjectCoinsApi() private readonly coinsApi: CoinsApi,
   ) {}
 

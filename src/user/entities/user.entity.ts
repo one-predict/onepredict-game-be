@@ -13,6 +13,7 @@ export interface UserEntity {
   getAvatarUrl(): string | undefined;
   getCoinsBalance(): number;
   getIsOnboarded(): boolean;
+  getReferer(): string;
 }
 
 export class MongoUserEntity implements UserEntity {
@@ -31,11 +32,11 @@ export class MongoUserEntity implements UserEntity {
   }
 
   public getUsername() {
-    return this.userDocument.lastName;
+    return this.userDocument.username;
   }
 
   public getFirstName() {
-    return this.userDocument.username;
+    return this.userDocument.firstName;
   }
 
   public getLastName() {
@@ -52,5 +53,9 @@ export class MongoUserEntity implements UserEntity {
 
   public getIsOnboarded() {
     return this.userDocument.onboarded;
+  }
+
+  public getReferer() {
+    return this.userDocument.referrer.toString();
   }
 }

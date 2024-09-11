@@ -28,7 +28,10 @@ export interface UpdateCoinsHistoricalRecordEntityParams {
 
 export interface CoinsHistoricalRecordRepository {
   find(query: FindCoinsHistoricalRecordEntitiesQuery): Promise<CoinsHistoricalRecordEntity[]>;
-  updateOneById(id: string, params: UpdateCoinsHistoricalRecordEntityParams): Promise<CoinsHistoricalRecordEntity | null>;
+  updateOneById(
+    id: string,
+    params: UpdateCoinsHistoricalRecordEntityParams,
+  ): Promise<CoinsHistoricalRecordEntity | null>;
   createMany(params: CreateCoinsHistoricalRecordEntityParams[]): Promise<CoinsHistoricalRecordEntity[]>;
 }
 
@@ -68,11 +71,14 @@ export class MongoCoinsHistoricalRecordRepository implements CoinsHistoricalReco
   }
 
   public async updateOneById(id: string, params: UpdateCoinsHistoricalRecordEntityParams) {
-    const pricingUpdates = Object.keys(params.prices || {}).reduce((previousUpdates, key) => {
-      previousUpdates[`prices.${key}`] = params.prices[key];
+    const pricingUpdates = Object.keys(params.prices || {}).reduce(
+      (previousUpdates, key) => {
+        previousUpdates[`prices.${key}`] = params.prices[key];
 
-      return previousUpdates;
-    }, {} as Record<string, number>);
+        return previousUpdates;
+      },
+      {} as Record<string, number>,
+    );
 
     const record = await this.coinsHistoricalRecordModel
       .findByIdAndUpdate(

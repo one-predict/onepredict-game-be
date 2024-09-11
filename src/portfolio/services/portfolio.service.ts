@@ -10,7 +10,7 @@ import {
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
-import {InjectTokensOfferService, TokensOfferEntity, TokensOfferService} from "@offer";
+import { InjectTokensOfferService, TokensOfferEntity, TokensOfferService } from '@offer';
 import {
   getTournamentRoundByTimestamp,
   InjectTournamentDeckService,

@@ -1,12 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import {
-  InjectCoinsApi,
-  InjectCoinsPricingInfoRepository,
-} from '@coin/decorators';
-import {
-  CoinsPricingInfoRepository,
-} from '@coin/repositories';
+import { InjectCoinsApi, InjectCoinsPricingInfoRepository } from '@coin/decorators';
+import { CoinsPricingInfoRepository } from '@coin/repositories';
 import { Coin } from '@coin/enums';
 import { CoinsApi } from '@coin/api';
 import { CoinsPricingInfoEntity } from '@coin/entities';
@@ -34,9 +29,7 @@ export class CoinsPricingServiceImpl implements CoinsPricingService {
 
   @Cron('*/20 * * * *')
   public async fetchCoinsLatestPrices() {
-    const coinsPricingDetails = await this.coinsApi.getCoinsLatestPrices(
-      Object.values(Coin) as Coin[],
-    );
+    const coinsPricingDetails = await this.coinsApi.getCoinsLatestPrices(Object.values(Coin) as Coin[]);
 
     await this.coinsPricingInfoRepository.updateOne({ pricingDetails: coinsPricingDetails });
   }

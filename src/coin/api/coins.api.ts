@@ -16,14 +16,17 @@ interface CryptoCompareHistohourResponse {
 }
 
 interface CryptoCompareLatestPriceMultiFullResponse {
-  RAW: Record<string, {
-    USD: {
-      PRICE: number;
-      CHANGEPCT24HOUR: number;
-      CHANGEPCTHOUR: number;
-      LASTUPDATE: number;
-    };
-  }>;
+  RAW: Record<
+    string,
+    {
+      USD: {
+        PRICE: number;
+        CHANGEPCT24HOUR: number;
+        CHANGEPCTHOUR: number;
+        LASTUPDATE: number;
+      };
+    }
+  >;
 }
 
 export interface CoinHistoryItem {
@@ -34,12 +37,19 @@ export interface CoinHistoryItem {
 
 export interface CoinsApi {
   getCoinHourlyHistory(coin: Coin): Promise<CoinHistoryItem[]>;
-  getCoinsLatestPrices(coins: Coin[]): Promise<Partial<Record<Coin, {
-    price: number;
-    percentChange24h: number;
-    percentChange1h: number;
-    lastUpdateTimestamp: number;
-  }>>>;
+  getCoinsLatestPrices(coins: Coin[]): Promise<
+    Partial<
+      Record<
+        Coin,
+        {
+          price: number;
+          percentChange24h: number;
+          percentChange1h: number;
+          lastUpdateTimestamp: number;
+        }
+      >
+    >
+  >;
 }
 
 @Injectable()
