@@ -104,12 +104,13 @@ export class PortfolioServiceImpl implements PortfolioService {
       throw new UnprocessableEntityException(`Provided user doesn't exist.`);
     }
 
-    const participation = await this.tournamentParticipationService.getUserParticipationInTournament(
-      user.getId(),
-      offer.getTournamentId(),
-    );
+    const tournamentId = offer.getTournamentId();
 
-    if (!participation) {
+    const participation = tournamentId
+      ? await this.tournamentParticipationService.getUserParticipationInTournament(user.getId(), tournamentId)
+      : null;
+
+    if (tournamentId && !participation) {
       throw new UnprocessableEntityException('User is not a participant of the tournament.');
     }
 
@@ -131,7 +132,7 @@ export class PortfolioServiceImpl implements PortfolioService {
       user: params.userId,
       selectedTokens: params.selectedTokens,
       offer: params.offerId,
-      tournament: offer.getTournamentId(),
+      tournament: tournamentId,
       intervalStartTimestamp: offerTimestamp,
       intervalEndTimestamp: offerTimestamp + offerDurationInSeconds,
       isAwarded: false,
