@@ -13,7 +13,7 @@ export interface UserEntity {
   getAvatarUrl(): string | undefined;
   getCoinsBalance(): number;
   getIsOnboarded(): boolean;
-  getReferer(): string;
+  getReferrerId(): string | undefined;
 }
 
 export class MongoUserEntity implements UserEntity {
@@ -55,7 +55,7 @@ export class MongoUserEntity implements UserEntity {
     return this.userDocument.onboarded;
   }
 
-  public getReferer() {
-    return this.userDocument.referrer.toString();
+  public getReferrerId() {
+    return this.userDocument.referrer?.toString();
   }
 }
