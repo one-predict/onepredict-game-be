@@ -37,7 +37,7 @@ async function bootstrap() {
     },
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const env = configService.get<string | undefined>('NODE_ENV') || 'development';
 

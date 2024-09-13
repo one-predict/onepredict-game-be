@@ -82,7 +82,7 @@ export class CryptoCompareCoinsApi implements CoinsApi {
     [Coin.ShibaInu]: 'SHIB',
     [Coin.Solana]: 'SOL',
     [Coin.Starknet]: 'STRK',
-    [Coin.Toncoin]: 'TONCOIN',
+    [Coin.Toncoin]: 'TON',
     [Coin.Wormhole]: 'W',
     [Coin.Xrp]: 'XRP',
   };

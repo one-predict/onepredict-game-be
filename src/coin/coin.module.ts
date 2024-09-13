@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CoreModule } from '@core';
-import { CoinsPricingInfoController } from '@coin/controllers';
+import { CoinsPricingInfoController, CoinsHistoryController } from '@coin/controllers';
 import {
   CoinsHistoricalRecord,
   CoinsPricingInfo,
@@ -23,7 +23,7 @@ import CoinModuleTokens from './coin.module.tokens';
     HttpModule,
     CoreModule,
   ],
-  controllers: [CoinsPricingInfoController],
+  controllers: [CoinsPricingInfoController, CoinsHistoryController],
   providers: [
     {
       provide: CoinModuleTokens.Services.CoinsHistoryService,

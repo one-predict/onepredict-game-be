@@ -14,17 +14,17 @@ export type ListCoinsHistoricalRecordsParams = FindCoinsHistoricalRecordEntities
 
 export interface CoinsHistoryService {
   list(params: ListCoinsHistoricalRecordsParams): Promise<CoinsHistoricalRecordEntity[]>;
+  listLatestCompletedForPeriod(period: number): Promise<CoinsHistoricalRecordEntity[]>;
 }
 
 @Injectable()
 export class CoinsHistoryServiceImpl implements CoinsHistoryService {
-  private readonly COINS_PRICES_SYNC_CHUNK_SIZE = 10; // ms
-  private readonly COINS_PRICES_SYNC_DELAY = 1000;
-  private readonly PRICING_RECORDS_GENERATION_THRESHOLD = 60 * 60 * 24 * 3; // 3 days in seconds
-  private readonly NUMBER_OF_PRICE_RECORDS_TO_GENERATE = 24 * 7; // 24 hours * 7 days
+  private readonly COINS_HISTORY_SYNC_CHUNK_SIZE = 10;
+  private readonly COINS_HISTORY_SYNC_DELAY = 1000; // 1 second in ms
+  private readonly HISTORY_RECORDS_GENERATION_THRESHOLD = 60 * 60 * 24 * 3; // 3 days in seconds
+  private readonly NUMBER_OF_HISTORY_RECORDS_TO_GENERATE = 24 * 7; // 24 hours * 7 days
   private readonly HOURLY_INTERVAL = 60 * 60; // 1 hour in seconds
-
-  private readonly PRICE_SYNC_ALERT_THRESHOLD = 60 * 60 * 2; // 3 hours in seconds
+  private readonly HISTORY_SYNC_ALERT_THRESHOLD = 60 * 60 * 3; // 3 hours in seconds
 
   constructor(
     @InjectCoinsHistoricalRecordRepository()
@@ -36,11 +36,26 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     return this.coinsHistoricalRecordRepository.find(params);
   }
 
+  public listLatestCompletedForPeriod(period: number) {
+    return this.coinsHistoricalRecordRepository.find({
+      filter: {
+        completed: true,
+      },
+      sort: [
+        {
+          field: CoinsHistoricalRecordSortField.Timestamp,
+          direction: SortDirection.Descending,
+        },
+      ],
+      limit: period + 1,
+    });
+  }
+
   @Cron('10 * * * *')
   public async fetchCoinsHistory() {
     const groupedCoinsPricing: Record<number, Record<string, number>> = {};
 
-    const chunks = chunk(Object.values(Coin), this.COINS_PRICES_SYNC_CHUNK_SIZE);
+    const chunks = chunk(Object.values(Coin), this.COINS_HISTORY_SYNC_CHUNK_SIZE);
 
     for (const chunk of chunks) {
       for (const coin of chunk) {
@@ -59,7 +74,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
         }
       }
 
-      await delay(this.COINS_PRICES_SYNC_DELAY);
+      await delay(this.COINS_HISTORY_SYNC_DELAY);
     }
 
     const historyRecords = await this.coinsHistoricalRecordRepository.find({
@@ -140,7 +155,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
 
     if (
       lastHistoryRecord &&
-      lastHistoryRecord.getTimestamp() - currentTimestamp > this.PRICING_RECORDS_GENERATION_THRESHOLD
+      lastHistoryRecord.getTimestamp() - currentTimestamp > this.HISTORY_RECORDS_GENERATION_THRESHOLD
     ) {
       return;
     }
@@ -148,7 +163,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     const initialTimestamp = lastHistoryRecord ? lastHistoryRecord.getTimestamp() : getNearestHourInUnixTimestamp();
 
     await this.coinsHistoricalRecordRepository.createMany(
-      new Array(this.NUMBER_OF_PRICE_RECORDS_TO_GENERATE).fill(null).map((key, index) => ({
+      new Array(this.NUMBER_OF_HISTORY_RECORDS_TO_GENERATE).fill(null).map((key, index) => ({
         timestamp: initialTimestamp + (index + 1) * this.HOURLY_INTERVAL,
         prices: {},
       })),
@@ -176,7 +191,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
 
     const currentTimestamp = getCurrentUnixTimestamp();
 
-    if (currentTimestamp - uncompletedHistoryRecord.getTimestamp() > this.PRICE_SYNC_ALERT_THRESHOLD) {
+    if (currentTimestamp - uncompletedHistoryRecord.getTimestamp() > this.HISTORY_SYNC_ALERT_THRESHOLD) {
       Sentry.captureMessage('Coins history records completion issue', {
         level: 'fatal',
       });
