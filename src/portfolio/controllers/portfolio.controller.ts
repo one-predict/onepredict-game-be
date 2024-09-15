@@ -58,6 +58,7 @@ export default class PortfolioController {
       appliedCardsStack: portfolio.getAppliedCardsStack(),
       interval: portfolio.getInterval(),
       tournamentId: portfolio.getTournamentId(),
+      points: portfolio.getPoints(),
       earnedCoins: portfolio.getEarnedCoins(),
       isAwarded: portfolio.isAwarded(),
       createdAt: portfolio.getCreatedAt(),

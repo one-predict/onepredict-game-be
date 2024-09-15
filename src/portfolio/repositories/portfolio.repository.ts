@@ -35,6 +35,7 @@ export interface CreatePortfolioEntityParams {
 
 export interface UpdatePortfolioEntityParams {
   isAwarded?: boolean;
+  points?: number;
   earnedCoins?: number;
   appliedCardsStack?: Record<string, number>;
 }

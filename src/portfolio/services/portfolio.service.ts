@@ -1,4 +1,3 @@
-import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
 import {
   Injectable,
@@ -50,6 +49,8 @@ export interface PortfolioService {
 
 @Injectable()
 export class PortfolioServiceImpl implements PortfolioService {
+  private MAIN_GAME_COINS_MULTIPLIER = 20;
+
   constructor(
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
     @InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService,
@@ -271,29 +272,35 @@ export class PortfolioServiceImpl implements PortfolioService {
             continue;
           }
 
-          const earnedCoins = portfolio.getSelectedTokens().reduce((previousCoins, selectedToken) => {
+          const points = portfolio.getSelectedTokens().reduce((previousPoint, selectedToken) => {
             const startIntervalTokenPrice = intervalStartPrices[selectedToken.id];
             const endIntervalTokenPrice = intervalEndPrices[selectedToken.id];
 
             const percentage = ((endIntervalTokenPrice - startIntervalTokenPrice) / startIntervalTokenPrice) * 100;
 
-            return previousCoins + (selectedToken.direction === 'falling' ? -percentage : percentage);
+            return previousPoint + (selectedToken.direction === 'falling' ? -percentage : percentage);
           }, 0);
 
           await this.transactionsManager.useTransaction(async () => {
+            const portfolioTournamentId = portfolio.getTournamentId();
+            const portfolioUserId = portfolio.getUserId();
+
+            const earnedCoins = portfolioTournamentId
+              ? Math.max(0, points * this.MAIN_GAME_COINS_MULTIPLIER)
+              : undefined;
+
             await this.portfolioRepository.updateOneById(portfolio.getId(), {
               isAwarded: true,
-              earnedCoins: round(earnedCoins, 2),
+              earnedCoins,
+              points,
             });
 
-            if (portfolio.getTournamentId()) {
-              await this.tournamentParticipationService.addPoints(
-                portfolio.getUserId(),
-                portfolio.getTournamentId(),
-                earnedCoins,
-              );
-            } else {
-              await this.userService.addCoins(portfolio.getUserId(), Math.max(0, earnedCoins * 2));
+            if (portfolioTournamentId) {
+              await this.tournamentParticipationService.addPoints(portfolioUserId, portfolioTournamentId, points);
+            }
+
+            if (earnedCoins) {
+              await this.userService.addCoins(portfolio.getUserId(), earnedCoins);
             }
           });
         } catch (error) {

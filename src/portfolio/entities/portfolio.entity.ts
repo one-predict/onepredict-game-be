@@ -11,7 +11,8 @@ export interface PortfolioEntity {
   getInterval(): [number, number];
   getAppliedCardsStack(): Record<string, number>;
   getSelectedTokens(): SelectedPortfolioToken[];
-  getEarnedCoins(): number;
+  getEarnedCoins(): number | undefined;
+  getPoints(): number | undefined;
   isAwarded(): boolean;
 }
 
@@ -44,6 +45,10 @@ export class MongoPortfolioEntity implements PortfolioEntity {
 
   public getEarnedCoins() {
     return this.portfolioDocument.earnedCoins;
+  }
+
+  public getPoints() {
+    return this.portfolioDocument.points;
   }
 
   public isAwarded() {
