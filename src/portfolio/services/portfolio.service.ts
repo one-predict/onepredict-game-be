@@ -1,3 +1,4 @@
+import { round } from 'lodash';
 import { Cron } from '@nestjs/schedule';
 import {
   Injectable,
@@ -281,26 +282,37 @@ export class PortfolioServiceImpl implements PortfolioService {
             return previousPoint + (selectedToken.direction === 'falling' ? -percentage : percentage);
           }, 0);
 
+          const roundedPoints = round(points, 2);
+
           await this.transactionsManager.useTransaction(async () => {
             const portfolioTournamentId = portfolio.getTournamentId();
             const portfolioUserId = portfolio.getUserId();
 
             const earnedCoins = portfolioTournamentId
-              ? Math.max(0, points * this.MAIN_GAME_COINS_MULTIPLIER)
-              : undefined;
+              ? Math.max(0, roundedPoints * this.MAIN_GAME_COINS_MULTIPLIER)
+              : 0;
+
+            const roundedEarnedCoins = round(earnedCoins, 2);
 
             await this.portfolioRepository.updateOneById(portfolio.getId(), {
               isAwarded: true,
-              earnedCoins,
-              points,
+              earnedCoins: roundedEarnedCoins,
+              points: roundedPoints,
             });
 
             if (portfolioTournamentId) {
-              await this.tournamentParticipationService.addPoints(portfolioUserId, portfolioTournamentId, points);
+              await this.tournamentParticipationService.addPoints(
+                portfolioUserId,
+                portfolioTournamentId,
+                roundedPoints,
+              );
             }
 
-            if (earnedCoins) {
-              await this.userService.addCoins(portfolio.getUserId(), earnedCoins);
+            if (roundedEarnedCoins) {
+              await this.userService.addCoins(
+                portfolio.getUserId(),
+                roundedEarnedCoins,
+              );
             }
           });
         } catch (error) {
