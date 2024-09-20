@@ -289,8 +289,8 @@ export class PortfolioServiceImpl implements PortfolioService {
             const portfolioUserId = portfolio.getUserId();
 
             const earnedCoins = portfolioTournamentId
-              ? Math.max(0, roundedPoints * this.MAIN_GAME_COINS_MULTIPLIER)
-              : 0;
+              ? 0
+              : Math.max(0, roundedPoints * this.MAIN_GAME_COINS_MULTIPLIER);
 
             const roundedEarnedCoins = round(earnedCoins, 2);
 
@@ -309,10 +309,7 @@ export class PortfolioServiceImpl implements PortfolioService {
             }
 
             if (roundedEarnedCoins) {
-              await this.userService.addCoins(
-                portfolio.getUserId(),
-                roundedEarnedCoins,
-              );
+              await this.userService.addCoins(portfolio.getUserId(), roundedEarnedCoins);
             }
           });
         } catch (error) {

@@ -12,6 +12,7 @@ export interface UserEntity {
   getUsername(): string | undefined;
   getAvatarUrl(): string | undefined;
   getCoinsBalance(): number;
+  getTotalEarnedCoins(): number;
   getIsOnboarded(): boolean;
   getReferrerId(): string | undefined;
 }
@@ -49,6 +50,10 @@ export class MongoUserEntity implements UserEntity {
 
   public getCoinsBalance() {
     return this.userDocument.coinsBalance;
+  }
+
+  public getTotalEarnedCoins() {
+    return this.userDocument.totalEarnedCoins;
   }
 
   public getIsOnboarded() {

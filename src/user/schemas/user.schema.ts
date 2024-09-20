@@ -16,6 +16,9 @@ export class User {
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
   coinsBalance: number;
 
+  @Prop({ required: false, type: mongoose.Schema.Types.Number, default: 0 })
+  totalEarnedCoins: number;
+
   @Prop({ type: mongoose.Schema.Types.String })
   username?: string;
 

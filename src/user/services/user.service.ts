@@ -33,11 +33,13 @@ export interface UserService {
   create(params: CreateUserParams): Promise<UserEntity>;
   update(id: string, params: UpdateUserParams): Promise<UserEntity>;
   withdrawCoins(id: string, coins: number): Promise<void>;
-  addCoins(id: string, coins: number): Promise<void>;
+  addCoins(id: string, coins: number): Promise<{ success: boolean }>;
 }
 
 @Injectable()
 export class UserServiceImpl implements UserService {
+  private REFERRALS_REWARD = 500;
+
   constructor(
     @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectUserRepository() private readonly userRepository: UserRepository,
@@ -82,6 +84,11 @@ export class UserServiceImpl implements UserService {
         referrer: params.referralId,
       });
 
+      // TODO Rewrite this to reward user using events system
+      if (params.referralId) {
+        await this.addCoins(params.referralId, this.REFERRALS_REWARD);
+      }
+
       await this.userInventoryService.create({ userId: user.getId() });
 
       return user;
@@ -105,16 +112,19 @@ export class UserServiceImpl implements UserService {
   }
 
   public async addCoins(id: string, coins: number) {
-    await this.transactionsManager.useTransaction(async () => {
+    return this.transactionsManager.useTransaction(async () => {
       const user = await this.getById(id);
 
       if (!user) {
-        throw new UnprocessableEntityException('Provided user is not found.');
+        return { success: false };
       }
 
       await this.userRepository.updateById(id, {
         coinsBalance: round(user.getCoinsBalance() + coins, 2),
+        totalEarnedCoins: round(user.getTotalEarnedCoins() + coins, 2),
       });
+
+      return { success: true };
     });
   }
 

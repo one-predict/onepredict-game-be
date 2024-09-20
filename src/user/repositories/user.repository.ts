@@ -31,6 +31,7 @@ interface UpdateUserEntityParams {
   lastName?: string;
   avatarUrl?: string;
   coinsBalance?: number;
+  totalEarnedCoins?: number;
   addCoins?: number;
 }
 
