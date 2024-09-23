@@ -21,6 +21,8 @@
       "@common/*": ["./src/common/*"],
       "@user/*": ["./src/user/*"],
       "@user": ["./src/user"],
+      "@rewards/*": ["./src/rewards/*"],
+      "@rewards": ["./src/rewards"],
       "@portfolio/*": ["./src/portfolio/*"],
       "@portfolio": ["./src/portfolio"],
       "@auth/*": ["./src/auth/*"],

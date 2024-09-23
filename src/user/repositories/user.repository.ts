@@ -7,7 +7,6 @@ import { transformSortArrayToSortObject } from '@common/utils';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { User } from '@user/schemas';
 import { UserEntity, MongoUserEntity } from '@user/entities';
-import { ExternalUserType } from '@user/enums';
 
 export type FindUserEntitiesQuery = FindEntitiesQuery<{
   externalId?: string | number;
@@ -16,7 +15,6 @@ export type FindUserEntitiesQuery = FindEntitiesQuery<{
 
 interface CreateUserEntityParams {
   externalId: string | number;
-  externalType: ExternalUserType;
   coinsBalance?: number;
   username?: string;
   firstName?: string;

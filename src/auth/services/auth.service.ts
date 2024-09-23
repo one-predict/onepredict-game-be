@@ -1,7 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { InjectUserService, UserEntity, UserService, ExternalUserType } from '@user';
+import { InjectUserService, UserEntity, UserService } from '@user';
 import { ConfigService } from '@nestjs/config';
+import { RegistrationService } from '@auth/services';
 import { getTelegramInitDataFromSignInMessage, verifyTelegramSignInMessage } from '@auth/utils';
+import { InjectRegistrationService } from '@auth/decorators';
 
 export interface SignInTemplateUser {
   signInMessage: string;
@@ -16,6 +18,7 @@ export interface AuthService {
 export class AuthServiceImpl implements AuthService {
   constructor(
     @InjectUserService() private readonly userService: UserService,
+    @InjectRegistrationService() private readonly registrationService: RegistrationService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -34,10 +37,9 @@ export class AuthServiceImpl implements AuthService {
     const user = await this.userService.getByExternalId(initData.user.id);
 
     if (!user) {
-      return this.userService.create({
+      return this.registrationService.register({
         externalId: initData.user.id,
-        externalType: ExternalUserType.Telegram,
-        username: initData.user.username,
+        userName: initData.user.username,
         firstName: initData.user.first_name,
         lastName: initData.user.last_name,
         avatarUrl: initData.user.photo_url,

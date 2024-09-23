@@ -38,7 +38,6 @@ export default class UserController {
     return {
       id: user.getId(),
       externalId: user.getExternalId(),
-      externalType: user.getExternalType(),
       username: user.getUsername(),
       firstName: user.getFirstName(),
       lastName: user.getLastName(),

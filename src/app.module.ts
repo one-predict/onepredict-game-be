@@ -16,6 +16,7 @@ import { InventoryModule } from '@inventory';
 import { PortfolioModule } from '@portfolio';
 import { MarketplaceModule } from '@marketplace';
 import { CoinModule } from '@coin';
+import { RewardsModule } from '@rewards';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CoinModule } from '@coin';
     CoinModule,
     InventoryModule,
     MarketplaceModule,
+    RewardsModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),

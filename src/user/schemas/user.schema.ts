@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { ExternalUserType } from '@user/enums';
 import { ObjectId } from 'mongodb';
 
 export type UserDocument = HydratedDocument<User>;
@@ -9,9 +8,6 @@ export type UserDocument = HydratedDocument<User>;
 export class User {
   @Prop({ required: true, type: mongoose.Schema.Types.Mixed })
   externalId: number | string;
-
-  @Prop({ required: true, type: mongoose.Schema.Types.String })
-  externalType: ExternalUserType;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number, default: 1000 })
   coinsBalance: number;

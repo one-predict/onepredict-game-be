@@ -1,12 +1,10 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { User } from '@user/schemas';
-import { ExternalUserType } from '@user/enums';
 
 export interface UserEntity {
   getId(): string;
   getExternalId(): string | number;
-  getExternalType(): ExternalUserType;
   getFirstName(): string | undefined;
   getLastName(): string | undefined;
   getUsername(): string | undefined;
@@ -26,10 +24,6 @@ export class MongoUserEntity implements UserEntity {
 
   public getExternalId() {
     return this.userDocument.externalId;
-  }
-
-  public getExternalType() {
-    return this.userDocument.externalType;
   }
 
   public getUsername() {

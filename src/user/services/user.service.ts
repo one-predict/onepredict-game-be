@@ -1,15 +1,12 @@
 import { round } from 'lodash';
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { TransactionsManager, InjectTransactionsManager } from '@core';
-import { InjectUserInventoryService, UserInventoryService } from '@inventory';
 import { UserRepository } from '@user/repositories';
 import { InjectUserRepository } from '@user/decorators';
 import { UserEntity } from '@user/entities';
-import { ExternalUserType } from '@user/enums';
 
 export interface CreateUserParams {
   externalId: string | number;
-  externalType: ExternalUserType;
   firstName?: string;
   lastName?: string;
   username?: string;
@@ -41,7 +38,6 @@ export class UserServiceImpl implements UserService {
   private REFERRALS_REWARD = 500;
 
   constructor(
-    @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectUserRepository() private readonly userRepository: UserRepository,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
@@ -75,7 +71,6 @@ export class UserServiceImpl implements UserService {
     return this.transactionsManager.useTransaction(async () => {
       const user = await this.userRepository.create({
         externalId: params.externalId,
-        externalType: params.externalType,
         coinsBalance: params.coinsBalance,
         username: params.username,
         firstName: params.firstName,
@@ -88,8 +83,6 @@ export class UserServiceImpl implements UserService {
       if (params.referralId) {
         await this.addCoins(params.referralId, this.REFERRALS_REWARD);
       }
-
-      await this.userInventoryService.create({ userId: user.getId() });
 
       return user;
     });
