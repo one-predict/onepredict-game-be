@@ -47,7 +47,7 @@ export class MongoTokensOfferRepository implements TokensOfferRepository {
     }
 
     if (query.filter.tournamentId !== undefined) {
-      mongodbQueryFilter.tournament = query.filter.tournamentId;
+      mongodbQueryFilter.tournament = query.filter.tournamentId && new ObjectId(query.filter.tournamentId);
     }
 
     const tokensOfferDocuments = await this.tokensOfferModel

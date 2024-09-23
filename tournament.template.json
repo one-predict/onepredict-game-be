@@ -1,0 +1,9 @@
+{
+  "title": "The Big Show",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/1200px-Bitcoin.svg.png",
+  "description": "This tournament is the best of the best. Only the top players are invited to compete in this event. The winner will be crowned the best player in the world.",
+  "entry_price": 100,
+  "rounds": 24,
+  "start_timestamp": 1727118000,
+  "round_duration_in_seconds": 3600
+}

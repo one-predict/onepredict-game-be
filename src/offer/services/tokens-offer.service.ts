@@ -32,10 +32,12 @@ export class TokensOfferServiceImpl implements TokensOfferService {
   constructor(@InjectTokensOfferRepository() private readonly tokensOfferRepository: TokensOfferRepository) {}
 
   public async getOffersSeries(tournamentId: string | null) {
+    const currentUnixTimestamp = getCurrentUnixTimestamp();
+
     const [currentOffer, ...previousOffers] = await this.tokensOfferRepository.find({
       filter: {
         tournamentId,
-        startsBefore: getCurrentUnixTimestamp(),
+        startsBefore: currentUnixTimestamp,
       },
       sort: [
         {
@@ -46,18 +48,12 @@ export class TokensOfferServiceImpl implements TokensOfferService {
       limit: this.MAX_OFFERS_PER_SERIES_QUERY,
     });
 
-    if (!currentOffer) {
-      return {
-        next: null,
-        current: null,
-        previous: [],
-      };
-    }
+    const currentOfferTimestamp = currentOffer?.getTimestamp();
 
     const [nextOffer] = await this.tokensOfferRepository.find({
       filter: {
         tournamentId,
-        startsAfter: currentOffer.getTimestamp() + 1,
+        startsAfter: currentOfferTimestamp ? currentOfferTimestamp + 1 : currentUnixTimestamp,
       },
       sort: [
         {

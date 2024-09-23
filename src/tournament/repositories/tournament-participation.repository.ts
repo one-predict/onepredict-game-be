@@ -136,7 +136,12 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
 
     const [{ summary = 0 } = {}] = await this.tournamentParticipationModel
       .aggregate([
-        Match(Or([{ points: Gt(participation.points) }, { points: participation.points, _id: Gt(participation._id) }])),
+        Match(
+          Or([
+            { tournament: new ObjectId(tournamentId), points: Gt(participation.points) },
+            { tournament: new ObjectId(tournamentId), points: participation.points, _id: Gt(participation._id) },
+          ]),
+        ),
         { $sort: { points: -1, _id: 1 } },
         { $count: 'summary' },
       ])
