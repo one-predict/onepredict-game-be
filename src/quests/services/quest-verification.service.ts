@@ -9,7 +9,7 @@ import { QuestProgressService, QuestService } from '@quests/services';
 import { QuestProgressStatus } from '@quests/enums';
 import { QuestProgressDto } from '@quests/dto';
 import { QuestProgressStateEntityToDtoMapper } from '@quests/entity-mappers';
-import {getSecondsDifference} from "@common/utils";
+import { getSecondsDifference } from '@common/utils';
 
 export interface QuestVerificationService {
   verify(questId: string, userId: string): Promise<QuestProgressDto>;
@@ -48,7 +48,9 @@ export class DefaultQuestVerificationService implements QuestVerificationService
       if (moderationEndDate && moderationEndDate > currentDate) {
         const secondsLeft = getSecondsDifference(moderationEndDate, currentDate);
 
-        throw new UnprocessableEntityException(`This quest cannot be verified now. Please try again in ${secondsLeft} seconds`);
+        throw new UnprocessableEntityException(
+          `This quest cannot be verified now. Please try again in ${secondsLeft} seconds`,
+        );
       }
 
       const updatedQuestProgressState = await this.questProgressService.update(questProgressState.getId(), {

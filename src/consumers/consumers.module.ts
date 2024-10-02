@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import {ConfigModule} from "@nestjs/config";
+import { ConfigModule } from '@nestjs/config';
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
 import { IdempotencyModule } from '@idempotency';
 import { DefaultConsumersRegistry } from './consumers.registry';

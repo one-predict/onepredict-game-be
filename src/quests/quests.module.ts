@@ -1,17 +1,17 @@
-import {Module} from '@nestjs/common';
-import { MongooseModule} from '@nestjs/mongoose';
-import {EventsModule} from '@events';
-import {CoreModule} from '@core';
-import {QuestController} from './controllers';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { EventsModule } from '@events';
+import { CoreModule } from '@core';
+import { QuestController } from './controllers';
 import {
   DefaultQuestProgressService,
   DefaultQuestRewardsService,
   DefaultQuestService,
   DefaultQuestVerificationService,
 } from './services';
-import {MongoQuestProgressStateRepository, MongoQuestRepository} from './repositories';
-import {Quest, QuestProgressState, QuestProgressStateSchema, QuestSchema} from './schemas';
-import {DefaultQuestEntityToDtoMapper, DefaultQuestProgressStateEntityToDtoMapper} from './entity-mappers';
+import { MongoQuestProgressStateRepository, MongoQuestRepository } from './repositories';
+import { Quest, QuestProgressState, QuestProgressStateSchema, QuestSchema } from './schemas';
+import { DefaultQuestEntityToDtoMapper, DefaultQuestProgressStateEntityToDtoMapper } from './entity-mappers';
 import QuestsModuleTokens from './quests.module.tokens';
 
 @Module({

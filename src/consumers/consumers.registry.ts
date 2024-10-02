@@ -1,7 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
-import {ConfigService} from "@nestjs/config";
-import {isDefaultMode} from "@common/utils";
+import { ConfigService } from '@nestjs/config';
+import { isDefaultMode } from '@common/utils';
 import { InjectIdempotencyService } from '@idempotency/decorators';
 import { IdempotencyService } from '@idempotency/services';
 import { IdempotencyConflictError } from '@idempotency/errors';
