@@ -2,6 +2,8 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { getCurrentUnixTimestamp } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
+import { EventsService } from '@events/services';
+import { InjectEventsService } from '@events/decorators';
 import {
   InjectTournamentDeckService,
   InjectTournamentParticipationRepository,
@@ -10,6 +12,8 @@ import {
 import { TournamentLeaderboard, TournamentParticipationRepository } from '@tournament/repositories';
 import { TournamentDeckService, TournamentService } from '@tournament/services';
 import { TournamentParticipationEntity } from '@tournament/entities';
+import { TournamentParticipationsEventType, TournamentsEventCategory } from '@tournament/enums';
+import { TournamentParticipationCreatedEventData } from '@tournament/types';
 
 export interface CreateTournamentParticipationParams {
   tournamentId: string;
@@ -37,6 +41,7 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectTournamentDeckService() private readonly tournamentDeckService: TournamentDeckService,
     @InjectUserService() private readonly userService: UserService,
+    @InjectEventsService() private readonly eventsService: EventsService,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
@@ -80,10 +85,27 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
         tournamentId: params.tournamentId,
       });
 
-      await this.tournamentParticipationRepository.create({
+      const tournamentParticipation = await this.tournamentParticipationRepository.create({
         tournament: params.tournamentId,
         user: params.userId,
         points: 0,
+      });
+
+      await this.eventsService.create<TournamentParticipationCreatedEventData>({
+        userId: params.userId,
+        category: TournamentsEventCategory.Tournaments,
+        type: TournamentParticipationsEventType.TournamentParticipationCreated,
+        data: {
+          object: {
+            id: tournamentParticipation.getId(),
+            tournamentId: tournamentParticipation.getTournamentId(),
+            userId: tournamentParticipation.getUserId(),
+            points: tournamentParticipation.getPoints(),
+          },
+        },
+        meta: {
+          tournamentPrice: tournament.getEntryPrice(),
+        },
       });
     });
   }

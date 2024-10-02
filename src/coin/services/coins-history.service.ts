@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import { chunk } from 'lodash';
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { ModeBasedCron } from '@common/decorators';
 import { delay, getCurrentUnixTimestamp, getNearestHourInUnixTimestamp } from '@common/utils';
 import { SortDirection } from '@common/enums';
 import { InjectCoinsApi, InjectCoinsHistoricalRecordRepository } from '@coin/decorators';
@@ -51,7 +51,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     });
   }
 
-  @Cron('10 * * * *')
+  @ModeBasedCron('10 * * * *')
   public async fetchCoinsHistory() {
     const groupedCoinsPricing: Record<number, Record<string, number>> = {};
 
@@ -107,7 +107,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     }
   }
 
-  @Cron('*/15 * * * *')
+  @ModeBasedCron('*/15 * * * *')
   public async finalizeCompletedHistoryRecords() {
     const historyRecords = await this.coinsHistoricalRecordRepository.find({
       filter: {
@@ -138,7 +138,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     }
   }
 
-  @Cron('0 */12 * * *')
+  @ModeBasedCron('0 */12 * * *')
   public async generateEmptyHistoryRecords() {
     const [lastHistoryRecord] = await this.coinsHistoricalRecordRepository.find({
       filter: {},
@@ -170,7 +170,7 @@ export class CoinsHistoryServiceImpl implements CoinsHistoryService {
     );
   }
 
-  @Cron('*/15 * * * *')
+  @ModeBasedCron('*/15 * * * *')
   public async inspectHistoryRecordsIssues() {
     const [uncompletedHistoryRecord] = await this.coinsHistoricalRecordRepository.find({
       filter: {

@@ -2,7 +2,8 @@ import { ObjectId } from 'mongodb';
 import { FilterQuery, Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AbstractCursor, FindEntitiesQuery } from '@common/types';
+import { Cursor } from '@common/data';
+import { FindEntitiesQuery } from '@common/types';
 import { transformSortArrayToSortObject } from '@common/utils';
 import { MongodbCursorAdapter } from '@common/adapters';
 import { MatchRange } from '@common/data/aggregations';
@@ -42,7 +43,7 @@ export interface UpdatePortfolioEntityParams {
 
 export interface PortfolioRepository {
   find(params: FindPortfolioEntitiesQuery): Promise<PortfolioEntity[]>;
-  findAsCursor(params: FindPortfolioEntitiesQuery): AbstractCursor<PortfolioEntity>;
+  findAsCursor(params: FindPortfolioEntitiesQuery): Cursor<PortfolioEntity>;
   findById(id: string): Promise<PortfolioEntity | null>;
   createOne(params: CreatePortfolioEntityParams): Promise<PortfolioEntity>;
   updateOneById(id: string, params: UpdatePortfolioEntityParams): Promise<PortfolioEntity | null>;

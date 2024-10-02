@@ -1,5 +1,4 @@
 import { round } from 'lodash';
-import { Cron } from '@nestjs/schedule';
 import {
   Injectable,
   InternalServerErrorException,
@@ -8,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { SortDirection } from '@common/enums';
+import { ModeBasedCron } from '@common/decorators';
 import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
 import { InjectTokensOfferService, TokensOfferEntity, TokensOfferService } from '@offer';
@@ -201,7 +201,7 @@ export class PortfolioServiceImpl implements PortfolioService {
     });
   }
 
-  @Cron('*/30 * * * *')
+  @ModeBasedCron('*/30 * * * *')
   public async awardPortfolios() {
     const [latestCompletedCoinsHistoricalRecord] = await this.coinsHistoryService.list({
       filter: {

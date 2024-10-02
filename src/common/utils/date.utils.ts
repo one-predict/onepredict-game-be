@@ -19,3 +19,11 @@ export const getUnixTimestampFromDate = (date: Date) => {
 export const getHoursDifference = (from: Date, to: Date) => {
   return Math.abs(Math.floor(dayjs(to).diff(dayjs(from), 'hours')));
 };
+
+export const getSecondsDifference = (from: Date, to: Date) => {
+  return Math.abs(Math.floor(dayjs(to).diff(dayjs(from), 'seconds')));
+}
+
+export const addMinutesToDate = (date: Date, minutes: number) => {
+  return dayjs(date).add(minutes, 'minutes').toDate();
+};

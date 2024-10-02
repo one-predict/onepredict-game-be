@@ -1,9 +1,9 @@
-import { AbstractCursor } from '@common/types';
+import { Cursor } from '@common/data';
 
 const DEFAULT_BATCH_LIMIT = 500;
 
 export const processCursor = async <Entity>(
-  cursor: AbstractCursor<Entity>,
+  cursor: Cursor<Entity>,
   callback: (batch: Array<Entity>) => Promise<void>,
   batchLimit = DEFAULT_BATCH_LIMIT,
 ) => {

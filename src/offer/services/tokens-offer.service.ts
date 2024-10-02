@@ -1,6 +1,6 @@
 import { sampleSize } from 'lodash';
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { ModeBasedCron } from '@common/decorators';
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, getNearestHourInUnixTimestamp } from '@common/utils';
 import { Coin } from '@coin';
@@ -75,7 +75,7 @@ export class TokensOfferServiceImpl implements TokensOfferService {
     return this.tokensOfferRepository.findById(id);
   }
 
-  @Cron('0 * * * *')
+  @ModeBasedCron('0 * * * *')
   public async generateMainGameOffers() {
     const [lastMainGameOffer] = await this.tokensOfferRepository.find({
       filter: {

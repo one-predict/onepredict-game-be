@@ -4,7 +4,10 @@ import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from '@core';
 import { UserModule } from '@user';
 import { InventoryModule } from '@inventory';
+import { EventsModule } from '@events';
+import { DeduplicationModule } from '@deduplication';
 import {
+  DefaultTournamentQuestActionsDetectionService,
   TournamentDeckServiceImpl,
   TournamentParticipationServiceImpl,
   TournamentServiceImpl,
@@ -27,6 +30,7 @@ import {
   TournamentController,
   TournamentDeckController,
 } from '@tournament/controllers';
+import { TournamentQuestActionsDetectionConsumer } from './consumers';
 import TournamentModuleTokens from './tournament.module.tokens';
 
 @Module({
@@ -38,6 +42,8 @@ import TournamentModuleTokens from './tournament.module.tokens';
     UserModule,
     CoreModule,
     InventoryModule,
+    EventsModule,
+    DeduplicationModule,
   ],
   controllers: [TournamentController, TournamentParticipationController, TournamentDeckController],
   providers: [
@@ -65,6 +71,14 @@ import TournamentModuleTokens from './tournament.module.tokens';
       provide: TournamentModuleTokens.Repositories.TournamentDeckRepository,
       useClass: MongoTournamentDeckRepository,
     },
+    {
+      provide: TournamentModuleTokens.Services.TournamentQuestActionsDetectionService,
+      useClass: DefaultTournamentQuestActionsDetectionService,
+    },
+    {
+      provide: TournamentQuestActionsDetectionConsumer,
+      useClass: TournamentQuestActionsDetectionConsumer,
+    },
   ],
   exports: [
     TournamentModuleTokens.Services.TournamentService,
@@ -72,4 +86,6 @@ import TournamentModuleTokens from './tournament.module.tokens';
     TournamentModuleTokens.Services.TournamentDeckService,
   ],
 })
-export class TournamentModule {}
+export class TournamentModule {
+  public static Tokens = TournamentModuleTokens;
+}

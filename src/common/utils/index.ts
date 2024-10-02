@@ -4,3 +4,5 @@ export * from './math.utils';
 export * from './mongoose.utils';
 export * from './database.utils';
 export * from './process.utils';
+export * from './errors.utils';
+export * from './application-mode.utils';

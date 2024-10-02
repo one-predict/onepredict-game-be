@@ -4,3 +4,4 @@ export { default as InjectTournamentParticipationService } from './inject-tourna
 export { default as InjectTournamentParticipationRepository } from './inject-tournament-participation-repository.decorator';
 export { default as InjectTournamentDeckService } from './inject-tournament-deck-service.decorator';
 export { default as InjectTournamentDeckRepository } from './inject-tournament-deck-repository.decorator';
+export { default as InjectTournamentQuestActionsDetectionConsumer } from './inject-tournament-quest-actions-detection-service.decorator';
