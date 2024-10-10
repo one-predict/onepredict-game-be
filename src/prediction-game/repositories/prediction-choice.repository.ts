@@ -25,8 +25,8 @@ export interface UpdatePredictionChoiceEntityParams {
 
 export interface PredictionChoiceRepository {
   findOneByUserIdAndRound(userId: string, round: number): Promise<PredictionChoiceEntity | null>;
-  findLimitedBeforeRound(round: number, limit: number): Promise<PredictionChoiceEntity[]>;
-  findNearestInPast(userId: string, round: number): Promise<PredictionChoiceEntity | null>;
+  findLimitedBeforeRoundByUserId(userId: string, round: number, limit: number): Promise<PredictionChoiceEntity[]>;
+  findNearestInPastByUserId(userId: string, round: number): Promise<PredictionChoiceEntity | null>;
   findNonAwardedByRoundAsCursor(round: number): Cursor<PredictionChoiceEntity>;
   createOne(params: CreatePredictionChoiceEntityParams): Promise<PredictionChoiceEntity>;
   updateOneById(id: string, params: UpdatePredictionChoiceEntityParams): Promise<PredictionChoiceEntity | null>;
@@ -39,7 +39,7 @@ export class MongoPredictionChoiceRepository implements PredictionChoiceReposito
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async findNearestInPast(userId: string, round: number) {
+  public async findNearestInPastByUserId(userId: string, round: number) {
     const predictionChoiceDocument = await this.predictionChoiceModel
       .findOne({ user: new ObjectId(userId), round: { $lt: round } })
       .sort({ round: -1 })
@@ -60,9 +60,9 @@ export class MongoPredictionChoiceRepository implements PredictionChoiceReposito
     return predictionChoiceDocument && new MongoPredictionChoiceEntity(predictionChoiceDocument);
   }
 
-  public async findLimitedBeforeRound(round: number, limit: number) {
+  public async findLimitedBeforeRoundByUserId(userId: string, round: number, limit: number) {
     const predictionChoiceDocuments = await this.predictionChoiceModel
-      .find({ round: { $lte: round } })
+      .find({ user: new ObjectId(userId), round: { $lte: round } })
       .sort({ round: -1 })
       .limit(limit)
       .session(this.transactionsManager.getSession())

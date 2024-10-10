@@ -18,7 +18,7 @@ export default class PredictionChoiceController {
     @Session() session: secureSession.Session,
     @Query() query: ListLatestPredictionChoicesQueryDto,
   ) {
-    return this.predictionChoiceService.listForLatestRounds(query.limit);
+    return this.predictionChoiceService.listLatestForUser(session.get('userId'), query.limit);
   }
 
   @Put('/prediction-choices/:round')

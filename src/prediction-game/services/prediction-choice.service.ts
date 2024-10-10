@@ -30,7 +30,7 @@ export interface SubmitTokensPredictionChoiceParams {
 }
 
 export interface PredictionChoiceService {
-  listForLatestRounds(limit: number): Promise<PredictionChoiceDto[]>;
+  listLatestForUser(userId: string, limit: number): Promise<PredictionChoiceDto[]>;
   submit(params: SubmitTokensPredictionChoiceParams): Promise<PredictionChoiceDto>;
 }
 
@@ -53,11 +53,11 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
   ) {}
 
-  public async listForLatestRounds(limit: number) {
+  public async listLatestForUser(userId: string, limit: number) {
     const currentRound = this.predictionGameRoundService.getCurrentRound();
     const nextRound = currentRound + 1;
 
-    const choices = await this.predictionChoiceRepository.findLimitedBeforeRound(nextRound, limit);
+    const choices = await this.predictionChoiceRepository.findLimitedBeforeRoundByUserId(userId, nextRound, limit);
 
     return this.predictionChoiceEntityToDtoMapper.mapMany(choices);
   }
@@ -87,7 +87,7 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
         });
       }
 
-      const previousChoice = await this.predictionChoiceRepository.findNearestInPast(user.getId(), nextRound);
+      const previousChoice = await this.predictionChoiceRepository.findNearestInPastByUserId(user.getId(), nextRound);
 
       return this.predictionChoiceRepository.createOne({
         user: params.userId,
