@@ -8,6 +8,10 @@ export const getCurrentUnixTimestamp = () => {
   return dayjs().utc().unix();
 };
 
+export const getCurrentHourInUnixTimestamp = () => {
+  return dayjs().utc().startOf('hour').unix();
+};
+
 export const getNearestHourInUnixTimestamp = () => {
   return dayjs().utc().startOf('hour').unix();
 };

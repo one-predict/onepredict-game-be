@@ -6,7 +6,7 @@ import { UserModule } from '@user';
 import { TournamentModule } from '@tournament';
 import { CoreModule } from '@core';
 import { CardModule } from '@card';
-import { CoinModule } from '@coin';
+import { DigitalAssetsModule } from '@digital-assets';
 import { OfferModule } from '@offer';
 import { InventoryModule } from '@inventory';
 import { Portfolio, PortfolioSchema } from '@portfolio/schemas';
@@ -24,7 +24,7 @@ import PortfolioModuleTokens from './portfolio.module.tokens';
     HttpModule,
     CoreModule,
     CardModule,
-    CoinModule,
+    DigitalAssetsModule,
     InventoryModule,
     OfferModule,
   ],

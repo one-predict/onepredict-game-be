@@ -30,7 +30,7 @@ import { CardModule } from '@card';
 import { InventoryModule } from '@inventory';
 import { PortfolioModule } from '@portfolio';
 import { MarketplaceModule } from '@marketplace';
-import { CoinModule } from '@coin';
+import { DigitalAssetsModule } from '@digital-assets';
 import { SqsModule } from '@sqs';
 import { SnsModule } from '@sns';
 import { EventsModule } from '@events';
@@ -44,6 +44,7 @@ import { LockModule } from '@lock';
 import { RedisLockModule } from '@redis-lock';
 import { ConsumersModule } from '@consumers';
 import { SqsConsumersModule } from '@sqs-consumers';
+import { PredictionGameModule } from '@prediction-game';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { SqsConsumersModule } from '@sqs-consumers';
         SQS_BASE_URL: Joi.string().required(),
         DISABLE_CONSUMERS: Joi.boolean().optional().default(false),
         APPLICATION_MODE: Joi.string().optional().default(ApplicationMode.Default),
+        PREDICTION_GAME_BASE_ASSET_COINS: Joi.number().optional().default(10),
       }),
     }),
     ScheduleModule.forRoot(),
@@ -204,12 +206,13 @@ import { SqsConsumersModule } from '@sqs-consumers';
     UserModule,
     PortfolioModule,
     CardModule,
-    CoinModule,
+    DigitalAssetsModule,
     InventoryModule,
     MarketplaceModule,
     QuestsModule,
     QuestsProcessingModule,
     ConsumersModule,
+    PredictionGameModule,
   ],
 })
 export class AppModule {

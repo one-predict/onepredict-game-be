@@ -1,5 +1,5 @@
-import { Coin } from '@coin/enums';
+import { DigitalAssetId } from '@digital-assets/enums';
 
-const tokens = Object.values(Coin);
+const tokens = Object.values(DigitalAssetId);
 
 export default tokens;

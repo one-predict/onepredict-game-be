@@ -11,6 +11,8 @@ import { ModeBasedCron } from '@common/decorators';
 import { getCurrentUnixTimestamp, processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
 import { InjectTokensOfferService, TokensOfferEntity, TokensOfferService } from '@offer';
+import { DigitalAssetsPricesSnapshotService } from '@digital-assets/services';
+import { InjectDigitalAssetsPricesSnapshotService } from '@digital-assets/decorators';
 import {
   getTournamentRoundByTimestamp,
   InjectTournamentDeckService,
@@ -22,12 +24,6 @@ import {
 } from '@tournament';
 import { InjectUserInventoryService, UserInventoryService } from '@inventory';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
-import {
-  InjectCoinsHistoryService,
-  CoinsHistoryService,
-  CoinsHistoricalRecordEntity,
-  CoinsHistoricalRecordSortField,
-} from '@coin';
 import { InjectPortfolioRepository } from '@portfolio/decorators';
 import { FindPortfolioEntitiesQuery, PortfolioRepository } from '@portfolio/repositories';
 import { PortfolioEntity } from '@portfolio/entities';
@@ -50,12 +46,11 @@ export interface PortfolioService {
 
 @Injectable()
 export class PortfolioServiceImpl implements PortfolioService {
-  private MAIN_GAME_COINS_MULTIPLIER = 20;
-
   constructor(
     @InjectPortfolioRepository() private readonly portfolioRepository: PortfolioRepository,
     @InjectTokensOfferService() private readonly tokensOfferService: TokensOfferService,
-    @InjectCoinsHistoryService() private readonly coinsHistoryService: CoinsHistoryService,
+    @InjectDigitalAssetsPricesSnapshotService()
+    private readonly digitalAssetsPricesSnapshotService: DigitalAssetsPricesSnapshotService,
     @InjectUserInventoryService() private readonly userInventoryService: UserInventoryService,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
     @InjectTournamentParticipationService()
@@ -203,24 +198,13 @@ export class PortfolioServiceImpl implements PortfolioService {
 
   @ModeBasedCron('*/30 * * * *')
   public async awardPortfolios() {
-    const [latestCompletedCoinsHistoricalRecord] = await this.coinsHistoryService.list({
-      filter: {
-        completed: true,
-      },
-      sort: [
-        {
-          field: CoinsHistoricalRecordSortField.Timestamp,
-          direction: SortDirection.Descending,
-        },
-      ],
-      limit: 1,
-    });
+    const [latestCompletedCoinsHistoricalRecord] = [] as any[];
 
     if (!latestCompletedCoinsHistoricalRecord) {
       return;
     }
 
-    const coinsHistoricalRecordsCache: Record<number, CoinsHistoricalRecordEntity> = {
+    const coinsHistoricalRecordsCache: Record<number, any> = {
       [latestCompletedCoinsHistoricalRecord.getTimestamp()]: latestCompletedCoinsHistoricalRecord,
     };
 
@@ -238,30 +222,6 @@ export class PortfolioServiceImpl implements PortfolioService {
     });
 
     await processCursor<PortfolioEntity>(cursor, async (portfolios) => {
-      const coinHistoricalTimestampsToLoadSet = portfolios.reduce((previousSet, portfolio) => {
-        const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
-
-        if (!coinsHistoricalRecordsCache[intervalStartTimestamp]) {
-          previousSet.add(intervalStartTimestamp);
-        }
-
-        if (!coinsHistoricalRecordsCache[intervalEndTimestamp]) {
-          previousSet.add(intervalEndTimestamp);
-        }
-
-        return previousSet;
-      }, new Set<number>());
-
-      const coinsHistoricalRecords = await this.coinsHistoryService.list({
-        filter: {
-          timestamps: Array.from(coinHistoricalTimestampsToLoadSet),
-        },
-      });
-
-      for (const coinsHistoricalRecord of coinsHistoricalRecords) {
-        coinsHistoricalRecordsCache[coinsHistoricalRecord.getTimestamp()] = coinsHistoricalRecord;
-      }
-
       for (const portfolio of portfolios) {
         try {
           const [intervalStartTimestamp, intervalEndTimestamp] = portfolio.getInterval();
@@ -288,15 +248,8 @@ export class PortfolioServiceImpl implements PortfolioService {
             const portfolioTournamentId = portfolio.getTournamentId();
             const portfolioUserId = portfolio.getUserId();
 
-            const earnedCoins = portfolioTournamentId
-              ? 0
-              : Math.max(0, roundedPoints * this.MAIN_GAME_COINS_MULTIPLIER);
-
-            const roundedEarnedCoins = round(earnedCoins, 2);
-
             await this.portfolioRepository.updateOneById(portfolio.getId(), {
               isAwarded: true,
-              earnedCoins: roundedEarnedCoins,
               points: roundedPoints,
             });
 
@@ -306,10 +259,6 @@ export class PortfolioServiceImpl implements PortfolioService {
                 portfolioTournamentId,
                 roundedPoints,
               );
-            }
-
-            if (roundedEarnedCoins) {
-              await this.userService.addCoins(portfolio.getUserId(), roundedEarnedCoins);
             }
           });
         } catch (error) {

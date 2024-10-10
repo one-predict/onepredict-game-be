@@ -1,0 +1,9 @@
+export { default as InjectPredictionChoiceRepository } from './inject-prediction-choice-repository.decorator';
+export { default as InjectPredictionChoiceService } from './inject-prediction-choice-service.decorator';
+export { default as InjectPredictionChoiceEntityToDtoMapper } from './inject-prediction-choice-entity-to-dto-mapper.decorator';
+export { default as InjectPredictionGameRoundService } from './inject-prediction-game-round-service.decorator';
+export { default as InjectPredictionStreakRepository } from './inject-prediction-streak-repository.decorator';
+export { default as InjectPredictionStreakService } from './inject-prediction-streak-service.decorator';
+export { default as InjectPredictionStreakEntityToDtoMapper } from './inject-prediction-streak-entity-to-dto-mapper.decorator';
+export { default as InjectPredictionGameStateRepository } from './inject-prediction-game-state-repository.decorator';
+export { default as InjectPredictionGameCoinsCalculationStrategy } from './inject-prediction-game-coins-calculation-strategy.decorator';

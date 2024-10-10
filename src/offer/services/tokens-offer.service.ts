@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ModeBasedCron } from '@common/decorators';
 import { SortDirection } from '@common/enums';
 import { getCurrentUnixTimestamp, getNearestHourInUnixTimestamp } from '@common/utils';
-import { Coin } from '@coin';
+import { DigitalAssetId } from '@digital-assets/enums';
 import { InjectTokensOfferRepository } from '@offer/decorators';
 import { TokensOfferRepository } from '@offer/repositories';
 import { TokensOfferEntity } from '@offer/entities';
@@ -107,7 +107,7 @@ export class TokensOfferServiceImpl implements TokensOfferService {
 
         return {
           timestamp: offerTimestamp,
-          tokens: sampleSize(tokens, this.MAX_TOKENS_PER_OFFER) as Coin[],
+          tokens: sampleSize(tokens, this.MAX_TOKENS_PER_OFFER) as DigitalAssetId[],
           durationInSeconds: this.MAIN_GAME_DURATION_IN_SECONDS,
           opensAfterTimestamp: offerTimestamp - this.MAIN_GAME_DURATION_IN_SECONDS,
         };

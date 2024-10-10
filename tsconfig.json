@@ -37,8 +37,10 @@
       "@card": ["./src/card"],
       "@marketplace/*": ["./src/marketplace/*"],
       "@marketplace": ["./src/marketplace"],
-      "@coin/*": ["./src/coin/*"],
-      "@coin": ["./src/coin"],
+      "@prediction-game": ["./src/prediction-game"],
+      "@prediction-game/*": ["./src/prediction-game/*"],
+      "@digital-assets/*": ["./src/digital-assets/*"],
+      "@digital-assets": ["./src/digital-assets"],
       "@offer/*": ["./src/offer/*"],
       "@offer": ["./src/offer"],
       "@events/*": ["./src/events/*"],
@@ -68,7 +70,9 @@
       "@redis-lock/*": ["./src/redis-lock/*"],
       "@redis-lock": ["./src/redis-lock"],
       "@cache/*": ["./src/cache/*"],
-      "@cache": ["./src/cache"]
+      "@cache": ["./src/cache"],
+      "@prng/*": ["./src/prng/*"],
+      "@prng": ["./src/prng"]
     }
   }
 }
