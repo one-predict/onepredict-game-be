@@ -1,9 +1,8 @@
 import { IsNotEmpty, IsArray, ArrayMaxSize } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsIdentifier } from '@common/class-validators';
-import { IsPortfolioSelectedToken } from '@portfolio/class-validators';
-import { SelectedPortfolioToken } from '@portfolio/schemas';
-import { IsCardsStack } from '@card';
+import { IsDigitalAssetPricePrediction } from '@prediction-game/class-validators';
+import { DigitalAssetPricePrediction } from '@prediction-game/types';
 
 export class ListPortfoliosDto {
   @IsArray()
@@ -16,15 +15,14 @@ export class CreatePortfolioDto {
   @IsNotEmpty()
   @IsArray()
   @ArrayMaxSize(6)
-  @IsPortfolioSelectedToken({ each: true })
-  selectedTokens: SelectedPortfolioToken[];
+  @IsDigitalAssetPricePrediction({ each: true })
+  predictions: DigitalAssetPricePrediction[];
 
   @IsNotEmpty()
   @IsIdentifier()
   offerId: string;
-}
 
-export class ApplyCardsToPortfolioDto {
-  @IsCardsStack()
-  cardsStack: Record<string, number>;
+  @IsNotEmpty()
+  @IsIdentifier()
+  tournamentId: string;
 }

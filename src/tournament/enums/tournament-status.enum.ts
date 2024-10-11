@@ -1,6 +1,5 @@
 enum TournamentStatus {
-  Upcoming = 'upcoming',
-  Live = 'live',
+  Available = 'available',
   Finished = 'finished',
 }
 

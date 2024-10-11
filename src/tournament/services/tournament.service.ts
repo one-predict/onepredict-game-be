@@ -31,14 +31,8 @@ export class TournamentServiceImpl implements TournamentService {
 
     return this.tournamentRepository.find({
       filter: {
-        ...(status === TournamentStatus.Upcoming
+        ...(status === TournamentStatus.Available
           ? {
-              startsAfter: currentTimestamp + 1,
-            }
-          : {}),
-        ...(status === TournamentStatus.Live
-          ? {
-              startsBefore: currentTimestamp,
               endsAfter: currentTimestamp,
             }
           : {}),

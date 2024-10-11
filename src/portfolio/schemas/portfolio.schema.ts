@@ -1,37 +1,24 @@
 import { ObjectId } from 'mongodb';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { DigitalAssetPricePrediction } from '@prediction-game/types';
+import { PortfolioResult } from '@portfolio/types';
 
 export type PortfolioDocument = HydratedDocument<Portfolio>;
-
-export type TokenDirection = 'growth' | 'falling';
-
-export interface SelectedPortfolioToken {
-  id: string;
-  direction: TokenDirection;
-}
-
-const SelectedPortfolioToken = new mongoose.Schema(
-  {
-    id: { type: String, required: true },
-    direction: { type: String, required: true },
-  },
-  { _id: false },
-);
 
 @Schema({ minimize: false })
 export class Portfolio {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   user: ObjectId;
 
-  @Prop([{ required: true, type: SelectedPortfolioToken }])
-  selectedTokens: SelectedPortfolioToken[];
+  @Prop([{ required: true, type: mongoose.Schema.Types.Mixed }])
+  predictions: DigitalAssetPricePrediction[];
 
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   offer: ObjectId;
 
-  @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, default: null })
-  tournament: ObjectId | null;
+  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
+  tournament: ObjectId;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   intervalStartTimestamp: number;
@@ -39,20 +26,14 @@ export class Portfolio {
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   intervalEndTimestamp: number;
 
-  @Prop({ required: false, type: mongoose.Schema.Types.Number })
-  earnedCoins?: number;
-
-  @Prop({ required: false, type: mongoose.Schema.Types.Number })
-  points?: number;
-
   @Prop({ required: true, type: mongoose.Schema.Types.Boolean })
   isAwarded: boolean;
 
-  @Prop({ required: false, type: mongoose.Schema.Types.Mixed, default: {} })
-  appliedCardsStack: Record<string, number>;
-
   @Prop({ type: mongoose.Schema.Types.Date })
   createdAt: Date;
+
+  @Prop({ required: false, type: mongoose.Schema.Types.Mixed })
+  result?: PortfolioResult;
 }
 
 export const PortfolioSchema = SchemaFactory.createForClass(Portfolio);

@@ -19,17 +19,9 @@ export type FindTokensOfferEntitiesQuery = FindEntitiesQuery<
   TokensOfferSortField
 >;
 
-export interface CreateTokensOfferEntityParams {
-  timestamp: number;
-  opensAfterTimestamp: number;
-  durationInSeconds: number;
-  tokens: string[];
-}
-
 export interface TokensOfferRepository {
   find(query: FindTokensOfferEntitiesQuery): Promise<TokensOfferEntity[]>;
   findById(id: string): Promise<TokensOfferEntity | null>;
-  createMany(params: CreateTokensOfferEntityParams[]): Promise<TokensOfferEntity[]>;
 }
 
 @Injectable()
@@ -72,13 +64,5 @@ export class MongoTokensOfferRepository implements TokensOfferRepository {
       .exec();
 
     return tokensOfferDocument && new MongoTokensOfferEntity(tokensOfferDocument);
-  }
-
-  public async createMany(params: CreateTokensOfferEntityParams[]) {
-    const tokensOfferDocuments = await this.tokensOfferModel.create(params);
-
-    return tokensOfferDocuments.map((tokensOfferDocument) => {
-      return new MongoTokensOfferEntity(tokensOfferDocument);
-    });
   }
 }

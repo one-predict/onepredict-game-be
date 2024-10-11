@@ -1,9 +1,9 @@
-import { Controller, Session, Get, UseGuards, Query, Post, Body, Put, Param } from '@nestjs/common';
+import { Controller, Session, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
 import { AuthGuard } from '@common/guards';
 import { PortfolioService } from '@portfolio/services';
 import { InjectPortfolioService } from '@portfolio/decorators';
-import { ApplyCardsToPortfolioDto, CreatePortfolioDto, ListPortfoliosDto } from '@portfolio/dto';
+import { CreatePortfolioDto, ListPortfoliosDto } from '@portfolio/dto';
 import { PortfolioEntity } from '@portfolio/entities';
 
 @Controller()
@@ -30,21 +30,10 @@ export default class PortfolioController {
   public async createPortfolio(@Session() session: secureSession.Session, @Body() body: CreatePortfolioDto) {
     const portfolio = await this.portfolioService.create({
       userId: session.get('userId'),
-      selectedTokens: body.selectedTokens,
+      predictions: body.predictions,
+      tournamentId: body.tournamentId,
       offerId: body.offerId,
     });
-
-    return this.mapPortfolioEntityToViewModel(portfolio);
-  }
-
-  @Put('/portfolios/:id/cards')
-  @UseGuards(AuthGuard)
-  public async applyCardsToPortfolio(
-    @Session() session: secureSession.Session,
-    @Param('id') id: string,
-    @Body() body: ApplyCardsToPortfolioDto,
-  ) {
-    const portfolio = await this.portfolioService.applyCards(id, body.cardsStack, session.get('userId'));
 
     return this.mapPortfolioEntityToViewModel(portfolio);
   }
@@ -54,12 +43,10 @@ export default class PortfolioController {
       id: portfolio.getId(),
       offerId: portfolio.getOfferId(),
       userId: portfolio.getUserId(),
-      selectedTokens: portfolio.getSelectedTokens(),
-      appliedCardsStack: portfolio.getAppliedCardsStack(),
+      predictions: portfolio.getPredictions(),
       interval: portfolio.getInterval(),
       tournamentId: portfolio.getTournamentId(),
-      points: portfolio.getPoints(),
-      earnedCoins: portfolio.getEarnedCoins(),
+      result: portfolio.getResult(),
       isAwarded: portfolio.isAwarded(),
       createdAt: portfolio.getCreatedAt(),
     };

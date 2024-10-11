@@ -87,6 +87,7 @@ export default class TournamentController {
       participantsCount: tournament.getParticipantsCount(),
       startTimestamp: tournament.getStartTimestamp(),
       endTimestamp: tournament.getEndTimestamp(),
+      joinCloseTimestamp: tournament.getJoinCloseTimestamp(),
       roundDurationInSeconds: tournament.getRoundDurationInSeconds(),
     };
   }

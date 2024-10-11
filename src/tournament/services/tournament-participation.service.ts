@@ -4,13 +4,9 @@ import { InjectUserService, UserService } from '@user';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { EventsService } from '@events/services';
 import { InjectEventsService } from '@events/decorators';
-import {
-  InjectTournamentDeckService,
-  InjectTournamentParticipationRepository,
-  InjectTournamentService,
-} from '@tournament/decorators';
+import { InjectTournamentParticipationRepository, InjectTournamentService } from '@tournament/decorators';
 import { TournamentLeaderboard, TournamentParticipationRepository } from '@tournament/repositories';
-import { TournamentDeckService, TournamentService } from '@tournament/services';
+import { TournamentService } from '@tournament/services';
 import { TournamentParticipationEntity } from '@tournament/entities';
 import { TournamentParticipationsEventType, TournamentsEventCategory } from '@tournament/enums';
 import { TournamentParticipationCreatedEventData } from '@tournament/types';
@@ -39,7 +35,6 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
     @InjectTournamentParticipationRepository()
     private readonly tournamentParticipationRepository: TournamentParticipationRepository,
     @InjectTournamentService() private readonly tournamentService: TournamentService,
-    @InjectTournamentDeckService() private readonly tournamentDeckService: TournamentDeckService,
     @InjectUserService() private readonly userService: UserService,
     @InjectEventsService() private readonly eventsService: EventsService,
     @InjectTransactionsManager() private readonly transactionsManager: TransactionsManager,
@@ -67,7 +62,7 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
 
       const currentTimestamp = getCurrentUnixTimestamp();
 
-      if (currentTimestamp >= tournament.getStartTimestamp()) {
+      if (currentTimestamp < tournament.getStartTimestamp() || currentTimestamp > tournament.getJoinCloseTimestamp()) {
         throw new UnprocessableEntityException('Tournament is not available for participation.');
       }
 
@@ -79,11 +74,6 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
 
       await this.userService.withdrawCoins(params.userId, tournament.getEntryPrice());
       await this.tournamentService.addParticipant(params.tournamentId);
-
-      await this.tournamentDeckService.create({
-        userId: params.userId,
-        tournamentId: params.tournamentId,
-      });
 
       const tournamentParticipation = await this.tournamentParticipationRepository.create({
         tournament: params.tournamentId,

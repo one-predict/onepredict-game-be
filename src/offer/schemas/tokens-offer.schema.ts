@@ -7,7 +7,7 @@ export type TokensOfferDocument = HydratedDocument<TokensOffer>;
 @Schema({ collection: 'tokens_offers' })
 export class TokensOffer {
   @Prop([{ required: true, type: mongoose.Schema.Types.String }])
-  tokens: Array<string>;
+  assets: Array<string>;
 
   @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, default: null })
   tournament: ObjectId | null;

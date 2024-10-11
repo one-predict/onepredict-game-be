@@ -12,7 +12,7 @@ export default class TokensOfferController {
   @Get('/tokens-offers/series')
   @UseGuards(AuthGuard)
   public async getOffersSeries(@Query() query: ListLatestTokensOffersDto) {
-    const series = await this.tokensOfferService.getOffersSeries(query.tournamentId ?? null);
+    const series = await this.tokensOfferService.getOffersSeries(query.tournamentId);
 
     return {
       next: series.next ? this.mapTokensOfferToViewModel(series.next) : null,
@@ -27,7 +27,7 @@ export default class TokensOfferController {
       timestamp: tokensOffer.getTimestamp(),
       durationInSeconds: tokensOffer.getDurationInSeconds(),
       opensAfterTimestamp: tokensOffer.getOpensAfterTimestamp(),
-      tokens: tokensOffer.getTokens(),
+      assets: tokensOffer.getAssets(),
       tournamentId: tokensOffer.getTournamentId(),
     };
   }

@@ -11,6 +11,7 @@ export interface TournamentEntity {
   getParticipantsCount(): number;
   getStartTimestamp(): number;
   getEndTimestamp(): number;
+  getJoinCloseTimestamp(): number;
   getRoundDurationInSeconds(): number;
   getImageUrl(): string | undefined;
 }
@@ -28,6 +29,10 @@ export class MongoTournamentEntity implements TournamentEntity {
 
   public getImageUrl() {
     return this.tournamentDocument.imageUrl;
+  }
+
+  public getJoinCloseTimestamp() {
+    return this.tournamentDocument.joinCloseTimestamp;
   }
 
   public getDescription() {

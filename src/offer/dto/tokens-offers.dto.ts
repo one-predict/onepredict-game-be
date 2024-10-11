@@ -1,8 +1,8 @@
-import { IsOptional } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { IsIdentifier } from '@common/class-validators';
 
 export class ListLatestTokensOffersDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsIdentifier()
-  tournamentId?: string | null;
+  tournamentId: string;
 }

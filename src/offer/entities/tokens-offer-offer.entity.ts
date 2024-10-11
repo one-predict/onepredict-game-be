@@ -4,11 +4,11 @@ import { TokensOffer } from '@offer/schemas';
 
 export interface TokensOfferEntity {
   getId(): string;
-  getTournamentId(): string | null;
+  getTournamentId(): string;
   getTimestamp(): number;
   getOpensAfterTimestamp(): number;
   getDurationInSeconds(): number;
-  getTokens(): string[];
+  getAssets(): string[];
 }
 
 export class MongoTokensOfferEntity implements TokensOfferEntity {
@@ -31,10 +31,10 @@ export class MongoTokensOfferEntity implements TokensOfferEntity {
   }
 
   public getTournamentId() {
-    return this.tokenOfferDocument.tournament?.toString() ?? null;
+    return this.tokenOfferDocument.tournament.toString();
   }
 
-  public getTokens() {
-    return this.tokenOfferDocument.tokens;
+  public getAssets() {
+    return this.tokenOfferDocument.assets;
   }
 }

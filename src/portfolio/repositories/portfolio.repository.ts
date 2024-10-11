@@ -8,8 +8,10 @@ import { transformSortArrayToSortObject } from '@common/utils';
 import { MongodbCursorAdapter } from '@common/adapters';
 import { MatchRange } from '@common/data/aggregations';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
-import { Portfolio, SelectedPortfolioToken } from '@portfolio/schemas';
+import { DigitalAssetPricePrediction } from '@prediction-game/types';
+import { Portfolio } from '@portfolio/schemas';
 import { PortfolioEntity, MongoPortfolioEntity } from '@portfolio/entities';
+import { PortfolioResult } from '@portfolio/types';
 
 export type FindPortfolioEntitiesQuery = FindEntitiesQuery<
   {
@@ -26,9 +28,9 @@ export type FindPortfolioEntitiesQuery = FindEntitiesQuery<
 
 export interface CreatePortfolioEntityParams {
   user: string;
-  selectedTokens: SelectedPortfolioToken[];
+  predictions: DigitalAssetPricePrediction[];
   offer: string;
-  tournament: string | null;
+  tournament: string;
   intervalStartTimestamp: number;
   intervalEndTimestamp: number;
   isAwarded: boolean;
@@ -37,8 +39,7 @@ export interface CreatePortfolioEntityParams {
 export interface UpdatePortfolioEntityParams {
   isAwarded?: boolean;
   points?: number;
-  earnedCoins?: number;
-  appliedCardsStack?: Record<string, number>;
+  result?: PortfolioResult;
 }
 
 export interface PortfolioRepository {

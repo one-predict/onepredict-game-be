@@ -1,6 +1,8 @@
 import { FlattenMaps } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { Portfolio, SelectedPortfolioToken } from '@portfolio/schemas';
+import { DigitalAssetPricePrediction } from '@prediction-game/types';
+import { Portfolio } from '@portfolio/schemas';
+import { PortfolioResult } from '@portfolio/types';
 
 export interface PortfolioEntity {
   getId(): string;
@@ -9,10 +11,8 @@ export interface PortfolioEntity {
   getTournamentId(): string | null;
   getCreatedAt(): Date;
   getInterval(): [number, number];
-  getAppliedCardsStack(): Record<string, number>;
-  getSelectedTokens(): SelectedPortfolioToken[];
-  getEarnedCoins(): number | undefined;
-  getPoints(): number | undefined;
+  getPredictions(): DigitalAssetPricePrediction[];
+  getResult(): PortfolioResult | undefined;
   isAwarded(): boolean;
 }
 
@@ -27,28 +27,20 @@ export class MongoPortfolioEntity implements PortfolioEntity {
     return this.portfolioDocument.user.toString();
   }
 
-  public getSelectedTokens() {
-    return this.portfolioDocument.selectedTokens;
+  public getPredictions() {
+    return this.portfolioDocument.predictions;
   }
 
   public getOfferId() {
     return this.portfolioDocument.offer.toString();
   }
 
-  public getAppliedCardsStack() {
-    return this.portfolioDocument.appliedCardsStack;
-  }
-
   public getCreatedAt() {
     return this.portfolioDocument.createdAt;
   }
 
-  public getEarnedCoins() {
-    return this.portfolioDocument.earnedCoins;
-  }
-
-  public getPoints() {
-    return this.portfolioDocument.points;
+  public getResult() {
+    return this.portfolioDocument.result;
   }
 
   public isAwarded() {
@@ -62,7 +54,7 @@ export class MongoPortfolioEntity implements PortfolioEntity {
     ];
   }
 
-  public getTournamentId(): string | null {
-    return this.portfolioDocument.tournament?.toString() ?? null;
+  public getTournamentId() {
+    return this.portfolioDocument.tournament.toString();
   }
 }

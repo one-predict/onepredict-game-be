@@ -28,6 +28,9 @@ export class Tournament {
   endTimestamp: number;
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
+  joinCloseTimestamp: number;
+
+  @Prop({ required: true, type: mongoose.Schema.Types.Number })
   roundDurationInSeconds: number;
 }
 

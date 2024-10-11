@@ -8,28 +8,17 @@ import { EventsModule } from '@events';
 import { DeduplicationModule } from '@deduplication';
 import {
   DefaultTournamentQuestActionsDetectionService,
-  TournamentDeckServiceImpl,
   TournamentParticipationServiceImpl,
   TournamentServiceImpl,
 } from '@tournament/services';
-import {
-  MongodbTournamentParticipationRepository,
-  MongoTournamentRepository,
-  MongoTournamentDeckRepository,
-} from '@tournament/repositories';
+import { MongodbTournamentParticipationRepository, MongoTournamentRepository } from '@tournament/repositories';
 import {
   Tournament,
-  TournamentDeck,
   TournamentParticipation,
-  TournamentDeckSchema,
   TournamentParticipationSchema,
   TournamentSchema,
 } from '@tournament/schemas';
-import {
-  TournamentParticipationController,
-  TournamentController,
-  TournamentDeckController,
-} from '@tournament/controllers';
+import { TournamentParticipationController, TournamentController } from '@tournament/controllers';
 import { TournamentQuestActionsDetectionConsumer } from './consumers';
 import TournamentModuleTokens from './tournament.module.tokens';
 
@@ -37,7 +26,6 @@ import TournamentModuleTokens from './tournament.module.tokens';
   imports: [
     MongooseModule.forFeature([{ name: Tournament.name, schema: TournamentSchema }]),
     MongooseModule.forFeature([{ name: TournamentParticipation.name, schema: TournamentParticipationSchema }]),
-    MongooseModule.forFeature([{ name: TournamentDeck.name, schema: TournamentDeckSchema }]),
     ConfigModule,
     UserModule,
     CoreModule,
@@ -45,7 +33,7 @@ import TournamentModuleTokens from './tournament.module.tokens';
     EventsModule,
     DeduplicationModule,
   ],
-  controllers: [TournamentController, TournamentParticipationController, TournamentDeckController],
+  controllers: [TournamentController, TournamentParticipationController],
   providers: [
     {
       provide: TournamentModuleTokens.Services.TournamentService,
@@ -64,14 +52,6 @@ import TournamentModuleTokens from './tournament.module.tokens';
       useClass: MongodbTournamentParticipationRepository,
     },
     {
-      provide: TournamentModuleTokens.Services.TournamentDeckService,
-      useClass: TournamentDeckServiceImpl,
-    },
-    {
-      provide: TournamentModuleTokens.Repositories.TournamentDeckRepository,
-      useClass: MongoTournamentDeckRepository,
-    },
-    {
       provide: TournamentModuleTokens.Services.TournamentQuestActionsDetectionService,
       useClass: DefaultTournamentQuestActionsDetectionService,
     },
@@ -83,7 +63,6 @@ import TournamentModuleTokens from './tournament.module.tokens';
   exports: [
     TournamentModuleTokens.Services.TournamentService,
     TournamentModuleTokens.Services.TournamentParticipationService,
-    TournamentModuleTokens.Services.TournamentDeckService,
   ],
 })
 export class TournamentModule {

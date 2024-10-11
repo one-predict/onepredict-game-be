@@ -21,8 +21,8 @@ interface TournamentConfig {
 })
 export class CreateTournamentCommand extends CommandRunner {
   private readonly SECONDS_IN_HOUR = 3600;
-  private readonly MAX_TOKENS_PER_OFFER = 6;
-  private readonly AVAILABLE_TOKENS = [
+  private readonly MAX_ASSETS_PER_OFFER = 12;
+  private readonly AVAILABLE_ASSETS = [
     'aptos',
     'arbitrum',
     'avalanche',
@@ -86,6 +86,7 @@ export class CreateTournamentCommand extends CommandRunner {
           staticPrizePool: config.static_prize_pool || 0,
           participantsCount: 0,
           startTimestamp: startTimestamp,
+          joinCloseTimestamp: startTimestamp + config.round_duration_in_seconds,
           endTimestamp: startTimestamp + ((config.rounds + 1) * config.round_duration_in_seconds),
           roundDurationInSeconds: config.round_duration_in_seconds,
           __v: 0,
@@ -98,7 +99,7 @@ export class CreateTournamentCommand extends CommandRunner {
 
           return {
             timestamp,
-            tokens: sampleSize(this.AVAILABLE_TOKENS, this.MAX_TOKENS_PER_OFFER),
+            assets: sampleSize(this.AVAILABLE_ASSETS, this.MAX_ASSETS_PER_OFFER),
             opensAfterTimestamp: timestamp - config.round_duration_in_seconds,
             durationInSeconds: config.round_duration_in_seconds,
             tournament: insertionResult.insertedId,
