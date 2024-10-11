@@ -4,6 +4,7 @@ import { AxiosHeaders } from 'axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { DigitalAssetId } from '@digital-assets/enums';
+import { DigitalAssetLatestTick } from '@digital-assets/types';
 
 interface CryptoCompareHistohourResponse {
   Data: Array<{
@@ -15,14 +16,30 @@ interface CryptoCompareHistohourResponse {
   TimeTo: number;
 }
 
+interface CryptoCompareLatestTickResponse {
+  Data: Record<
+    string,
+    {
+      VALUE: number;
+      VALUE_LAST_UPDATE_TS: number;
+      CURRENT_HOUR_OPEN: number;
+      CURRENT_HOUR_CHANGE: number;
+      CURRENT_HOUR_CHANGE_PERCENTAGE: number;
+    }
+  >;
+}
+
 export interface DigitalAssetHistoryItem {
   time: number;
   open: number;
   close: number;
 }
 
+export type DigitalAssetsTicksData = Record<DigitalAssetId, DigitalAssetLatestTick>;
+
 export interface DigitalAssetsApi {
   getAssetHourlyHistory(assetId: DigitalAssetId): Promise<DigitalAssetHistoryItem[]>;
+  getAssetLatestTick(assetId: DigitalAssetId[]): Promise<DigitalAssetsTicksData>;
 }
 
 @Injectable()
@@ -31,6 +48,7 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
 
   private readonly cryptoCompareApiKey: string;
   private readonly cryptoCompareApiUrl: string;
+  private readonly cryptoCompareMinApiUrl: string;
 
   private ASSET_ID_TO_FSYM_MAP: Record<DigitalAssetId, string> = {
     [DigitalAssetId.Aptos]: 'APT',
@@ -66,6 +84,7 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
   ) {
     this.cryptoCompareApiKey = this.configService.getOrThrow<string>('CRYPTO_COMPARE_API_KEY');
     this.cryptoCompareApiUrl = this.configService.getOrThrow<string>('CRYPTO_COMPARE_API_URL');
+    this.cryptoCompareMinApiUrl = this.configService.getOrThrow<string>('CRYPTO_COMPARE_MIN_API_URL');
   }
 
   public async getAssetHourlyHistory(assetId: DigitalAssetId) {
@@ -76,7 +95,7 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
     searchParams.set('tsym', 'USD');
 
     const observable = await this.httpService.get<CryptoCompareHistohourResponse>(
-      `${this.cryptoCompareApiUrl}/histohour?${searchParams}`,
+      `${this.cryptoCompareMinApiUrl}/index/cc/v1/historical/hours?${searchParams}`,
       {
         headers: new AxiosHeaders({
           Authorization: `ApiKey ${this.cryptoCompareApiKey}`,
@@ -93,5 +112,57 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
         close: item.close,
       };
     });
+  }
+
+  public async getAssetLatestTick(assets: DigitalAssetId[]) {
+    const searchParams = new URLSearchParams();
+
+    const groups = 'VALUE,CURRENT_HOUR,ID';
+
+    const instruments = assets
+      .map((assetId) => {
+        return `${this.ASSET_ID_TO_FSYM_MAP[assetId]}-USD`;
+      })
+      .join(',');
+
+    searchParams.append('market', 'ccix');
+    searchParams.append('instruments', instruments);
+    searchParams.append('groups', groups);
+
+    const fsymToAssetIdMap = Object.entries(this.ASSET_ID_TO_FSYM_MAP).reduce((map, [assetId, fsym]) => {
+      map[fsym] = assetId;
+
+      return map;
+    });
+
+    const observable = await this.httpService.get<CryptoCompareLatestTickResponse>(
+      `${this.cryptoCompareApiUrl}/index/cc/v1/latest/tick?${searchParams}`,
+      {
+        headers: new AxiosHeaders({
+          Authorization: `ApiKey ${this.cryptoCompareApiKey}`,
+        }),
+      },
+    );
+
+    const { data: responseData } = await firstValueFrom(observable.pipe());
+
+    return Object.keys(responseData.Data).reduce((ticksData, key) => {
+      const [fsym] = key.split('-');
+
+      const assetId = fsymToAssetIdMap[fsym as string] as DigitalAssetId;
+      const instrumentData = responseData.Data[key];
+
+      if (assetId) {
+        ticksData[assetId] = {
+          timestamp: instrumentData.VALUE_LAST_UPDATE_TS,
+          price: instrumentData.VALUE,
+          currentHourOpenPrice: instrumentData.CURRENT_HOUR_OPEN,
+          currentHourPriceChange: instrumentData.CURRENT_HOUR_CHANGE,
+          currentHourPriceChangePercentage: instrumentData.CURRENT_HOUR_CHANGE_PERCENTAGE,
+        };
+      }
+
+      return ticksData;
+    }, {} as DigitalAssetsTicksData);
   }
 }

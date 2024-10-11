@@ -4,7 +4,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type PredictionStreakDocument = HydratedDocument<PredictionStreak>;
 
-@Schema({ timestamps: true, collection: 'user_prediction_streaks' })
+@Schema({ timestamps: true, collection: 'prediction_streaks', minimize: false })
 export class PredictionStreak {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   user: ObjectId;

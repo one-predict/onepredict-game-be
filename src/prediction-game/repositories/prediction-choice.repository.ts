@@ -76,7 +76,7 @@ export class MongoPredictionChoiceRepository implements PredictionChoiceReposito
 
   public findNonAwardedByRoundAsCursor(round: number) {
     const cursor = this.predictionChoiceModel
-      .find({ round, awarded: false })
+      .find({ round, isAwarded: false })
       .session(this.transactionsManager.getSession())
       .lean()
       .cursor();

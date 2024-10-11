@@ -43,7 +43,7 @@ export class DefaultPredictionGameCoinsCalculationStrategy implements Prediction
           coins: earnedCoinsForAsset,
         };
 
-        choiceResult.earnedCoins += earnedCoinsForAsset * assetStreak;
+        choiceResult.earnedCoins += earnedCoinsForAsset;
 
         return choiceResult;
       },
@@ -52,7 +52,10 @@ export class DefaultPredictionGameCoinsCalculationStrategy implements Prediction
 
     return {
       ...predictionChoiceResult,
-      earnedCoins: round(predictionChoiceResult.earnedCoins * choicesStreak, this.EARNED_COINS_PRECISION),
+      earnedCoins: round(
+        predictionChoiceResult.earnedCoins + choicesStreak * this.baseAssetCoins,
+        this.EARNED_COINS_PRECISION,
+      ),
     };
   }
 

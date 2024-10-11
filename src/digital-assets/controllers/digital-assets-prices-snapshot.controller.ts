@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@common/guards';
 import { InjectDigitalAssetsPricesSnapshotService } from '@digital-assets/decorators';
 import { DigitalAssetsPricesSnapshotService } from '@digital-assets/services';
@@ -15,5 +15,11 @@ export default class DigitalAssetsPricesSnapshotController {
   @UseGuards(AuthGuard)
   public async listLatest(@Query() query: ListLatestDigitalAssetsPricesSnapshotsDto) {
     return this.digitalAssetsPricesSnapshotsService.listLatest(query.period);
+  }
+
+  @Get('/digital-assets-prices-snapshots/:timestamp')
+  @UseGuards(AuthGuard)
+  public async getByTimestamp(@Param('timestamp', new ParseIntPipe()) timestamp: number) {
+    return this.digitalAssetsPricesSnapshotsService.getByTimestamp(timestamp);
   }
 }

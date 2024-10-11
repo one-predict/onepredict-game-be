@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
-import { keyBy } from 'lodash';
 import { ModeBasedCron } from '@common/decorators';
 import { processCursor } from '@common/utils';
 import { InjectUserService, UserService } from '@user';
@@ -100,7 +99,7 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
     return this.predictionChoiceEntityToDtoMapper.mapOne(choice);
   }
 
-  @ModeBasedCron('*/15 * * * *')
+  @ModeBasedCron('* * * * *')
   public async processRounds() {
     const roundsToProcess = await this.determineRoundsToProcess();
 
@@ -108,24 +107,30 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
       return;
     }
 
-    const snapshots = await this.loadSnapshotsForRounds(roundsToProcess);
-
     for (const round of roundsToProcess) {
-      await this.processRoundChoices(round, snapshots);
+      const { startTimestamp, endTimestamp } = this.predictionGameRoundService.getRoundTimeBoundaries(round);
+
+      const [roundStartSnapshot, roundEndSnapshot] = await Promise.all([
+        this.digitalAssetsPricesSnapshotService.getByTimestamp(startTimestamp),
+        this.digitalAssetsPricesSnapshotService.getByTimestamp(endTimestamp),
+      ]);
+
+      if (!roundStartSnapshot || !roundEndSnapshot) {
+        throw new Error(`Failed to fetch snapshots for round ${round}`);
+      }
+
+      await this.processRoundChoices(round, roundStartSnapshot, roundEndSnapshot);
       await this.predictionGameRoundService.updateLastProcessedRound(round);
     }
   }
 
-  private async processRoundChoices(round: number, snapshots: Record<string, DigitalAssetsPricesSnapshotDto>) {
-    const { startTimestamp: roundStartTimestamp, endTimestamp: roundEndTimestamp } =
-      this.predictionGameRoundService.getRoundTimeBoundaries(round);
-
-    const roundStartPrices = snapshots[roundStartTimestamp].prices;
-    const roundEndPrices = snapshots[roundEndTimestamp].prices;
-
-    if (!roundStartPrices || !roundEndPrices) {
-      return;
-    }
+  private async processRoundChoices(
+    round: number,
+    startRoundSnapshot: DigitalAssetsPricesSnapshotDto,
+    endRoundSnapshot: DigitalAssetsPricesSnapshotDto,
+  ) {
+    const roundStartPrices = startRoundSnapshot.prices;
+    const roundEndPrices = endRoundSnapshot.prices;
 
     const cursor = this.predictionChoiceRepository.findNonAwardedByRoundAsCursor(round);
 
@@ -194,29 +199,22 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
   }
 
   private async determineRoundsToProcess() {
-    const lastProcessedRound = await this.predictionGameRoundService.getLastProcessedRound();
-    const currentRound = this.predictionGameRoundService.getCurrentRound();
+    const [latestSnapshot] = await this.digitalAssetsPricesSnapshotService.listLatest(1);
 
-    const nextRoundToProcess = lastProcessedRound + 1;
-
-    if (nextRoundToProcess >= currentRound) {
+    if (!latestSnapshot) {
       return [] as number[];
     }
 
-    const roundsToProcess = currentRound - nextRoundToProcess;
+    const lastProcessedRound = await this.predictionGameRoundService.getLastProcessedRound();
+    const availableRound = this.predictionGameRoundService.getRoundByUnixTimestamp(latestSnapshot.timestamp);
 
-    return Array.from({ length: roundsToProcess }, (_, index) => nextRoundToProcess + index);
-  }
+    if (availableRound <= lastProcessedRound) {
+      return [] as number[];
+    }
 
-  private async loadSnapshotsForRounds(roundsToProcess: number[]) {
-    const { startTimestamp } = this.predictionGameRoundService.getRoundTimeBoundaries(roundsToProcess[0]);
-    const { endTimestamp } = this.predictionGameRoundService.getRoundTimeBoundaries(
-      roundsToProcess[roundsToProcess.length - 1],
-    );
+    const roundsToProcess = availableRound - lastProcessedRound;
 
-    const snapshots = await this.digitalAssetsPricesSnapshotService.listInInterval(startTimestamp, endTimestamp);
-
-    return keyBy(snapshots, 'timestamp');
+    return Array.from({ length: roundsToProcess }, (_, index) => lastProcessedRound + index);
   }
 
   private getChoiceStreakSequence(choiceRound: number, previousChoice: PredictionChoiceEntity) {

@@ -17,13 +17,14 @@ import { DigitalAssetsPricesSnapshotDto } from '@digital-assets/dto';
 export interface DigitalAssetsPricesSnapshotService {
   listLatest(limit: number): Promise<DigitalAssetsPricesSnapshotDto[]>;
   listInInterval(intervalStart: number, intervalEnd: number): Promise<DigitalAssetsPricesSnapshotDto[]>;
+  getByTimestamp(timestamp: number): Promise<DigitalAssetsPricesSnapshotDto | null>;
 }
 
 @Injectable()
 export class DefaultDigitalAssetsPricesSnapshotService implements DigitalAssetsPricesSnapshotService {
   private readonly ASSETS_SNAPSHOTS_CHUNK_SIZE = 10;
   private readonly ASSETS_SNAPSHOTS_SYNC_DELAY = 1000; // 1 second in ms
-  private readonly ASSETS_SNAPSHOT_THRESHOLD = 60 * 65; // 1 hour and 5 minutes in seconds
+  private readonly ASSETS_SNAPSHOT_THRESHOLD = 60 * 62; // 1 hour and 2 minutes in seconds
 
   constructor(
     @InjectDigitalAssetsPricesSnapshotRepository()
@@ -45,7 +46,13 @@ export class DefaultDigitalAssetsPricesSnapshotService implements DigitalAssetsP
     return this.digitalAssetsPricesSnapshotEntityMapper.mapMany(snapshots);
   }
 
-  @ModeBasedCron('*/10 * * * *')
+  public async getByTimestamp(timestamp: number) {
+    const snapshot = await this.digitalAssetsPricesSnapshotRepository.findByTimestamp(timestamp);
+
+    return snapshot ? this.digitalAssetsPricesSnapshotEntityMapper.mapOne(snapshot) : null;
+  }
+
+  @ModeBasedCron('*/5 * * * *')
   public async takeSnapshots() {
     const currentTimestamp = getCurrentUnixTimestamp();
 

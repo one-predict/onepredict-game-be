@@ -14,6 +14,7 @@ export interface CreateDigitalAssetsPricesSnapshotEntityParams {
 export interface DigitalAssetsPricesSnapshotRepository {
   findByInterval(intervalStart: number, intervalEnd: number): Promise<DigitalAssetsPricesSnapshotEntity[]>;
   findLatest(limit: number): Promise<DigitalAssetsPricesSnapshotEntity[]>;
+  findByTimestamp(timestamp: number): Promise<DigitalAssetsPricesSnapshotEntity | null>;
   createMany(params: CreateDigitalAssetsPricesSnapshotEntityParams[]): Promise<DigitalAssetsPricesSnapshotEntity[]>;
 }
 
@@ -53,6 +54,16 @@ export class MongoDigitalAssetsPricesSnapshotRepository implements DigitalAssets
     return snapshots.map((snapshot) => {
       return new MongoDigitalAssetsPricesSnapshot(snapshot);
     });
+  }
+
+  public async findByTimestamp(timestamp: number) {
+    const snapshot = await this.digitalAssetsPricesSnapshotModel
+      .findOne({ timestamp })
+      .session(this.transactionsManager.getSession())
+      .lean()
+      .exec();
+
+    return snapshot ? new MongoDigitalAssetsPricesSnapshot(snapshot) : null;
   }
 
   public async createMany(params: CreateDigitalAssetsPricesSnapshotEntityParams[]) {

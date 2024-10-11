@@ -20,13 +20,14 @@ export class PredictionChoice {
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   streakSequence: number;
 
-  @Prop({ required: false, default: true, type: mongoose.Schema.Types.Boolean })
+  @Prop({ required: false, default: false, type: mongoose.Schema.Types.Boolean })
   isAwarded: boolean;
 
-  @Prop({ required: false, type: mongoose.Schema.Types.Map, of: mongoose.Schema.Types.Mixed })
+  @Prop({ required: false, type: mongoose.Schema.Types.Mixed })
   result?: PredictionChoiceResult;
 }
 
 export const PredictionChoiceSchema = SchemaFactory.createForClass(PredictionChoice);
 
 PredictionChoiceSchema.index({ user: 1, round: 1 }, { unique: true });
+PredictionChoiceSchema.index({ isAwarded: 1, round: 1 });

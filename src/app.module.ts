@@ -58,6 +58,7 @@ import { PredictionGameModule } from '@prediction-game';
         COOKIE_DOMAIN: Joi.string().optional(),
         CRYPTO_COMPARE_API_KEY: Joi.string().required(),
         CRYPTO_COMPARE_API_URL: Joi.string().required(),
+        CRYPTO_COMPARE_MIN_API_URL: Joi.string().required(),
         SESSIONS_SECRET: Joi.string().required(),
         TELEGRAM_BOT_TOKEN: Joi.string().required(),
         REDIS_URL: Joi.string().required(),
