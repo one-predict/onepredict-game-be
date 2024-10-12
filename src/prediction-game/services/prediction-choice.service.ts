@@ -99,7 +99,7 @@ export class DefaultPredictionChoiceService implements PredictionChoiceService {
     return this.predictionChoiceEntityToDtoMapper.mapOne(choice);
   }
 
-  @ModeBasedCron('* * * * *')
+  @ModeBasedCron('*/15 * * * *')
   public async processRounds() {
     const roundsToProcess = await this.determineRoundsToProcess();
 
