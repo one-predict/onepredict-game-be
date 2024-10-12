@@ -11,7 +11,7 @@ export interface DigitalAssetsTickRepository {
 
 @Injectable()
 export class RedisDigitalAssetsTickRepository implements DigitalAssetsTickRepository {
-  private readonly NAMESPACE = 'asset-ticks';
+  private readonly NAMESPACE = '{asset-ticks}';
 
   public constructor(@InjectRedis() private redisClient: Redis) {}
 
@@ -19,8 +19,6 @@ export class RedisDigitalAssetsTickRepository implements DigitalAssetsTickReposi
     const keys = assetIds.map((assetId) => this.getRedisKey(assetId));
 
     const serializedTicks = await this.redisClient.mget(keys);
-
-    console.log('serializedTicks', serializedTicks);
 
     return serializedTicks.reduce(
       (ticks, serializedTick, index) => {

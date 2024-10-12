@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { FilterQuery, Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Gt, Match, Or } from '@common/data/aggregations';
+import { Gt, Lt, Match, Or } from '@common/data/aggregations';
 import { FindEntitiesQuery } from '@common/types';
 import { InjectTransactionsManager, TransactionsManager } from '@core';
 import { TournamentParticipation } from '@tournament/schemas';
@@ -139,7 +139,7 @@ export class MongodbTournamentParticipationRepository implements TournamentParti
         Match(
           Or([
             { tournament: new ObjectId(tournamentId), points: Gt(participation.points) },
-            { tournament: new ObjectId(tournamentId), points: participation.points, _id: Gt(participation._id) },
+            { tournament: new ObjectId(tournamentId), points: participation.points, _id: Lt(participation._id) },
           ]),
         ),
         { $sort: { points: -1, _id: 1 } },

@@ -1,18 +1,18 @@
 import * as Sentry from '@sentry/node';
-import { chunk } from 'lodash';
-import { Injectable, Logger } from '@nestjs/common';
-import { ModeBasedCron } from '@common/decorators';
-import { delay, getCurrentUnixTimestamp } from '@common/utils';
+import {chunk} from 'lodash';
+import {Injectable, Logger} from '@nestjs/common';
+import {ModeBasedCron} from '@common/decorators';
+import {delay, getCurrentUnixTimestamp} from '@common/utils';
 import {
   InjectDigitalAssetsApi,
   InjectDigitalAssetsPricesSnapshotEntityMapper,
   InjectDigitalAssetsPricesSnapshotRepository,
 } from '@digital-assets/decorators';
-import { DigitalAssetsPricesSnapshotRepository } from '@digital-assets/repositories';
-import { DigitalAssetId } from '@digital-assets/enums';
-import { DigitalAssetsApi } from '@digital-assets/api';
-import { DigitalAssetsPricesSnapshotEntityMapper } from '@digital-assets/entity-mappers';
-import { DigitalAssetsPricesSnapshotDto } from '@digital-assets/dto';
+import {DigitalAssetsPricesSnapshotRepository} from '@digital-assets/repositories';
+import {DigitalAssetId} from '@digital-assets/enums';
+import {DigitalAssetsApi} from '@digital-assets/api';
+import {DigitalAssetsPricesSnapshotEntityMapper} from '@digital-assets/entity-mappers';
+import {DigitalAssetsPricesSnapshotDto} from '@digital-assets/dto';
 
 export interface DigitalAssetsPricesSnapshotService {
   listLatest(limit: number): Promise<DigitalAssetsPricesSnapshotDto[]>;

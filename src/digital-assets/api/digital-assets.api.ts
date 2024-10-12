@@ -7,11 +7,13 @@ import { DigitalAssetId } from '@digital-assets/enums';
 import { DigitalAssetLatestTick } from '@digital-assets/types';
 
 interface CryptoCompareHistohourResponse {
-  Data: Array<{
-    time: number;
-    open: number;
-    close: number;
-  }>;
+  Data: {
+    Data: Array<{
+      time: number;
+      open: number;
+      close: number;
+    }>;
+  };
   TimeFrom: number;
   TimeTo: number;
 }
@@ -95,7 +97,7 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
     searchParams.set('tsym', 'USD');
 
     const observable = await this.httpService.get<CryptoCompareHistohourResponse>(
-      `${this.cryptoCompareMinApiUrl}/index/cc/v1/historical/hours?${searchParams}`,
+      `${this.cryptoCompareMinApiUrl}/data/v2/histohour?${searchParams}`,
       {
         headers: new AxiosHeaders({
           Authorization: `ApiKey ${this.cryptoCompareApiKey}`,
@@ -105,7 +107,7 @@ export class CryptoCompareDigitalAssetsApi implements DigitalAssetsApi {
 
     const { data: responseData } = await firstValueFrom(observable.pipe());
 
-    return responseData.Data.map((item) => {
+    return responseData.Data.Data.map((item) => {
       return {
         time: item.time,
         open: item.open,
