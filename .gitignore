@@ -15,6 +15,7 @@ lerna-debug.log*
 /tournaments
 
 # OS
+volumes
 .DS_Store
 
 # Tests

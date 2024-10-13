@@ -27,7 +27,7 @@ async function bootstrap() {
   const configService: ConfigService = app.get(ConfigService);
 
   await app.register(secureSession, {
-    key: Buffer.from(configService.getOrThrow<string>('SESSIONS_SECRET'), 'hex'),
+    key: Buffer.concat([Buffer.from(configService.getOrThrow<string>('SESSIONS_SECRET'), 'hex')], 32),
     cookie: {
       domain: configService.get<string>('COOKIE_DOMAIN'),
       httpOnly: true,

@@ -1,0 +1,98 @@
+version: '3.9'
+
+networks:
+  backend:
+    name: backend
+
+services:
+  mongodb:
+    image: mongo:5.0
+    hostname: mongodb
+    restart: always
+    container_name: onepredict-mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - ../volumes/mongo/rs0:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=platform
+    command: mongod --replSet rs0 --bind_ip localhost,mongodb
+    networks:
+      - backend
+
+  mongodb-rs1:
+    image: mongo:5.0
+    restart: always
+    hostname: mongodb-rs1
+    container_name: onepredict-mongodb-rs1
+    ports:
+      - 27018:27018
+    environment:
+      - MONGO_INITDB_DATABASE=platform
+    volumes:
+      - ../volumes/mongo/rs1:/data/db
+    command: mongod --replSet rs0 --bind_ip localhost,mongodb-rs1 --port 27018
+    networks:
+      - backend
+
+  mongodb-rs2:
+    image: mongo:5.0
+    restart: always
+    hostname: mongodb-rs2
+    container_name: onepredict-mongodb-rs2
+    ports:
+      - 27019:27019
+    environment:
+      - MONGO_INITDB_DATABASE=platform
+    volumes:
+      - ../volumes/mongo/rs2:/data/db
+    command: mongod --replSet rs0 --bind_ip localhost,mongodb-rs2 --port 27019
+    networks:
+      - backend
+
+  mongo-shell:
+    image: mongo:5.0
+    restart: 'no'
+    depends_on:
+      - mongodb
+      - mongodb-rs1
+      - mongodb-rs2
+    command: >
+      mongosh --host mongodb:27017 --eval "rs.initiate({
+        _id: \"rs0\",
+        members: [
+          {_id: 0, host: \"mongodb:27017\"},
+          {_id: 1, host: \"mongodb-rs1:27018\"},
+          {_id: 2, host: \"mongodb-rs2:27019\"}
+        ]
+        })"
+    networks:
+      - backend
+
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    container_name: onepredict-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - ../volumes/cache:/data
+    networks:
+      - backend
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   restart: always
+  #   container_name: onepredict-rabbitmq
+  #   ports:
+  #     - '5672:5672'
+  #     - '15672:15672' #dashboard
+  #   volumes:
+  #     - ../volumes/rabbitmq:/data
+  #   hostname: rabbitmq
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+  #     - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+  #   networks:
+  #     - backend

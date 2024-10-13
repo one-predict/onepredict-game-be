@@ -12,6 +12,9 @@ export class TournamentParticipation {
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   points: number;
+
+  @Prop({ required: false, type: mongoose.Schema.Types.String })
+  walletAddress: string;
 }
 
 export const TournamentParticipationSchema = SchemaFactory.createForClass(TournamentParticipation);

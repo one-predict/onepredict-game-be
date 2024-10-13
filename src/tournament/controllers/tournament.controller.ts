@@ -1,10 +1,14 @@
-import { Controller, UseGuards, Post, Get, Param, NotFoundException, Session, Query } from '@nestjs/common';
+import { Controller, UseGuards, Post, Get, Param, NotFoundException, Session, Query, Body } from '@nestjs/common';
 import * as secureSession from '@fastify/secure-session';
 import { AuthGuard } from '@common/guards';
 import { InjectTournamentService, InjectTournamentParticipationService } from '@tournament/decorators';
 import { TournamentParticipationService, TournamentService } from '@tournament/services';
 import { TournamentEntity, TournamentParticipationEntity } from '@tournament/entities';
-import { ListLatestTournamentsDto } from '@tournament/dto';
+import {
+  CreateTournamentParticipationDto,
+  CreateTournamentParticipationWithWalletAddressDto,
+  ListLatestTournamentsDto,
+} from '@tournament/dto';
 
 @Controller()
 export default class TournamentController {
@@ -67,10 +71,15 @@ export default class TournamentController {
 
   @Post('/tournaments/:id/participation')
   @UseGuards(AuthGuard)
-  public async joinTournament(@Session() session: secureSession.Session, @Param('id') tournamentId: string) {
+  public async joinTournament(
+    @Session() session: secureSession.Session,
+    @Param('id') tournamentId: string,
+    @Body() body: CreateTournamentParticipationWithWalletAddressDto,
+  ) {
     await this.tournamentParticipationService.create({
       tournamentId,
       userId: session.get('userId'),
+      walletAddress: body.walletAddress,
     });
 
     return { success: true };
@@ -89,6 +98,7 @@ export default class TournamentController {
       endTimestamp: tournament.getEndTimestamp(),
       joinCloseTimestamp: tournament.getJoinCloseTimestamp(),
       roundDurationInSeconds: tournament.getRoundDurationInSeconds(),
+      isTonConnected: tournament.getIsTonConnected(),
     };
   }
 
@@ -98,6 +108,7 @@ export default class TournamentController {
       userId: tournamentParticipation.getUserId(),
       tournamentId: tournamentParticipation.getTournamentId(),
       points: tournamentParticipation.getPoints(),
+      walletAddress: tournamentParticipation.getWalletAddress(),
     };
   }
 }

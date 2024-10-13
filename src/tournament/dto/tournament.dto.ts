@@ -7,3 +7,9 @@ export class ListLatestTournamentsDto {
   @IsIn(Object.values(TournamentStatus))
   status?: TournamentStatus;
 }
+
+export class CreateTournamentParticipationWithWalletAddressDto {
+  @IsOptional()
+  @IsString()
+  walletAddress: string;
+}

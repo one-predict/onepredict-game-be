@@ -14,6 +14,7 @@ export interface TournamentEntity {
   getJoinCloseTimestamp(): number;
   getRoundDurationInSeconds(): number;
   getImageUrl(): string | undefined;
+  getIsTonConnected(): boolean;
 }
 
 export class MongoTournamentEntity implements TournamentEntity {
@@ -61,5 +62,9 @@ export class MongoTournamentEntity implements TournamentEntity {
 
   public getEndTimestamp() {
     return this.tournamentDocument.endTimestamp;
+  }
+
+  public getIsTonConnected() {
+    return this.tournamentDocument.isTonConnected;
   }
 }

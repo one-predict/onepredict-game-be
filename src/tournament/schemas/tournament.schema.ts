@@ -32,6 +32,9 @@ export class Tournament {
 
   @Prop({ required: true, type: mongoose.Schema.Types.Number })
   roundDurationInSeconds: number;
+
+  @Prop({ required: false, type: mongoose.Schema.Types.Boolean })
+  isTonConnected?: boolean;
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);
