@@ -10,9 +10,9 @@ import { PredictionChoiceRepository } from '@prediction-game/repositories';
 import {
   InjectPredictionChoiceEntityToDtoMapper,
   InjectPredictionChoiceRepository,
+  InjectPredictionGameCoinsCalculationStrategy,
   InjectPredictionGameRoundService,
   InjectPredictionStreakService,
-  InjectPredictionGameCoinsCalculationStrategy,
 } from '@prediction-game/decorators';
 import { DigitalAssetPricePrediction } from '@prediction-game/types';
 import { PredictionChoiceDto } from '@prediction-game/dto';
