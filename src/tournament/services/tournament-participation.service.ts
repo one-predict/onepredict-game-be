@@ -14,11 +14,13 @@ import { TournamentParticipationCreatedEventData } from '@tournament/types';
 export interface CreateTournamentParticipationParams {
   tournamentId: string;
   userId: string;
+  walletAddress?: string;
 }
 
 export interface CreateTournamentParticipationParams {
   userId: string;
   tournamentId: string;
+  walletAddress?: string;
 }
 
 export interface TournamentParticipationService {
@@ -72,13 +74,16 @@ export class TournamentParticipationServiceImpl implements TournamentParticipati
         throw new UnprocessableEntityException('User already participated in the tournament.');
       }
 
-      await this.userService.withdrawCoins(params.userId, tournament.getEntryPrice());
+      if (!tournament.getIsTonConnected()) {
+        await this.userService.withdrawCoins(params.userId, tournament.getEntryPrice());
+      }
       await this.tournamentService.addParticipant(params.tournamentId);
 
       const tournamentParticipation = await this.tournamentParticipationRepository.create({
         tournament: params.tournamentId,
         user: params.userId,
         points: 0,
+        walletAddress: params.walletAddress,
       });
 
       await this.eventsService.create<TournamentParticipationCreatedEventData>({

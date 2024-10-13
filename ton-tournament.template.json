@@ -1,0 +1,11 @@
+{
+    "title": "The Ton Tournament",
+    "image_url": "https://ton.org/download/ton_symbol.png",
+    "description": "Welcome to the Ultimate Ton Tournament, where players from all over come together to showcase their skills in the ancient game of Ton. Whether you're a seasoned player or new to the game, this tournament promises excitement, strategy, and plenty of fun!",
+    "entry_price": 0.005,
+    "rounds": 24,
+    "start_timestamp": 1728347703,
+    "round_duration_in_seconds": 3600,
+    "isTonConnected": true
+  }
+  

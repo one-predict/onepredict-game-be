@@ -18,6 +18,7 @@ export interface CreateTournamentParticipationEntityParams {
   user: string;
   tournament: string;
   points: number;
+  walletAddress?: string;
 }
 
 export interface TournamentLeaderboard {

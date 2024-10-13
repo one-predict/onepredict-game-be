@@ -13,6 +13,7 @@ interface TournamentConfig {
   start_timestamp: number;
   rounds: number;
   static_prize_pool?: number;
+  isTonConnected?: boolean;
 }
 
 @Command({
@@ -89,6 +90,7 @@ export class CreateTournamentCommand extends CommandRunner {
           joinCloseTimestamp: startTimestamp + config.round_duration_in_seconds,
           endTimestamp: startTimestamp + ((config.rounds + 1) * config.round_duration_in_seconds),
           roundDurationInSeconds: config.round_duration_in_seconds,
+          isTonConnected: config.isTonConnected
           __v: 0,
         }, {
           session,
