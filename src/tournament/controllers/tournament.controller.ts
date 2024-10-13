@@ -4,11 +4,7 @@ import { AuthGuard } from '@common/guards';
 import { InjectTournamentService, InjectTournamentParticipationService } from '@tournament/decorators';
 import { TournamentParticipationService, TournamentService } from '@tournament/services';
 import { TournamentEntity, TournamentParticipationEntity } from '@tournament/entities';
-import {
-  CreateTournamentParticipationDto,
-  CreateTournamentParticipationWithWalletAddressDto,
-  ListLatestTournamentsDto,
-} from '@tournament/dto';
+import { CreateTournamentParticipationWithWalletAddressDto, ListLatestTournamentsDto } from '@tournament/dto';
 
 @Controller()
 export default class TournamentController {
