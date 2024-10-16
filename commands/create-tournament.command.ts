@@ -22,33 +22,31 @@ interface TournamentConfig {
 })
 export class CreateTournamentCommand extends CommandRunner {
   private readonly SECONDS_IN_HOUR = 3600;
-  private readonly MAX_ASSETS_PER_OFFER = 12;
+  private readonly MAX_ASSETS_PER_OFFER = 9;
   private readonly AVAILABLE_ASSETS = [
-    'aptos',
-    'arbitrum',
-    'avalanche',
-    'axie',
-    'bitcoin',
-    'bnb',
-    'celestia',
-    'chia',
-    'cosmos',
     'dogecoin',
-    'ethereum',
-    'fantom',
-    'jupiter',
-    'litecoin',
-    'mantle',
-    'near',
-    'optimism',
-    'polkadot',
-    'polygon',
     'shiba-inu',
+    'wif',
+    'pepe',
+    'bome',
+    'neiro',
+    'turbo',
+    'bonk',
+    'dogs',
+    'meme',
+    'floki',
+    'notcoin',
+    'hmstr',
+    'popcat',
+    'mew',
+    'cati',
+    'banana',
+    'sun-dog',
+    'brett',
+    'baby-doge',
     'solana',
-    'starknet',
     'toncoin',
-    'wormhole',
-    'xrp'
+    'ethereum',
   ];
 
   private readonly TOURNAMENT_COLLECTION_NAME = 'tournaments';
@@ -63,6 +61,7 @@ export class CreateTournamentCommand extends CommandRunner {
     round_duration_in_seconds: Joi.number().required().min(3600),
     start_timestamp: Joi.number().required(),
     static_prize_pool: Joi.number().optional(),
+    isTonConnected: Joi.boolean().optional(),
   });
 
   public async run(inputs: string[]) {
@@ -90,7 +89,7 @@ export class CreateTournamentCommand extends CommandRunner {
           joinCloseTimestamp: startTimestamp + config.round_duration_in_seconds,
           endTimestamp: startTimestamp + ((config.rounds + 1) * config.round_duration_in_seconds),
           roundDurationInSeconds: config.round_duration_in_seconds,
-          isTonConnected: config.isTonConnected
+          isTonConnected: config.isTonConnected,
           __v: 0,
         }, {
           session,
